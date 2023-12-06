@@ -1,3 +1,15 @@
+# v0.0.9 (Wed Dec 06 2023)
+
+#### ⚠️ Pushed to `main`
+
+- corrigir o nome do arquivo, espor portas adequadas ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+#### Authors: 1
+
+- Gabriel fresan ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+---
+
 # v0.0.8 (Wed Dec 06 2023)
 
 #### ⚠️ Pushed to `main`
