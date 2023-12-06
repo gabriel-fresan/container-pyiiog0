@@ -25,18 +25,6 @@
 
 =======
 >>>>>>> da7277e (Revert "Update CHANGELOG.md [skip ci]")
-# v0.0.3 (Wed Dec 06 2023)
-
-#### ⚠️ Pushed to `main`
-
-- add the 8080 port ([@gabriel-fresan](https://github.com/gabriel-fresan))
-
-#### Authors: 1
-
-- Gabriel fresan ([@gabriel-fresan](https://github.com/gabriel-fresan))
-
----
-
 # v0.0.2 (Wed Dec 06 2023)
 
 #### ⚠️ Pushed to `main`
