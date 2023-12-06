@@ -1,3 +1,15 @@
+# v0.0.8 (Wed Dec 06 2023)
+
+#### ⚠️ Pushed to `main`
+
+- Abrir as portas 8000 e 25565 ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+#### Authors: 1
+
+- Gabriel fresan ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+---
+
 # v0.0.7 (Wed Dec 06 2023)
 
 #### ⚠️ Pushed to `main`
