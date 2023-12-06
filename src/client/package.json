@@ -1,7 +1,0 @@
-{
-  "private": true,
-  "workspaces": ["api", "frontend"],
-  "scripts": {
-    "build": "yarn workspaces run build"
-  }
-}

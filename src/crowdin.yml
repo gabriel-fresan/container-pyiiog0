@@ -1,3 +1,0 @@
-files:
-  - source: /client/frontend/src/lang/en_US/*.json
-    translation: /client/frontend/src/lang/%locale_with_underscore%/%original_file_name%
