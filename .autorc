@@ -1,0 +1,12 @@
+{
+  "plugins": [
+    "git-tag",
+    "all-contributors",
+    "first-time-contributor",
+    "released"
+  ],
+  "owner": "gabriel-fresan",
+  "repo": "container-pyiiog0",
+  "name": "gabriel-fresan",
+  "email": "69011585+gabriel-fresan@users.noreply.github.com",
+}
