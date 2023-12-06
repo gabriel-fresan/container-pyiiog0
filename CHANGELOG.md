@@ -1,3 +1,19 @@
+# v0.0.6 (Wed Dec 06 2023)
+
+#### ⚠️ Pushed to `main`
+
+- Revert "Added deploy.yml file" ([@gabriel-fresan](https://github.com/gabriel-fresan))
+- Revert "adição completa do pufferpanel" ([@gabriel-fresan](https://github.com/gabriel-fresan))
+- Revert "add the 8080 port" ([@gabriel-fresan](https://github.com/gabriel-fresan))
+- Revert "updated to add user on starting" ([@gabriel-fresan](https://github.com/gabriel-fresan))
+- Revert "version rollback of puffer panel to a more stable one" ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+#### Authors: 1
+
+- Gabriel fresan ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+---
+
 <<<<<<< HEAD
 # v0.0.5 (Wed Dec 06 2023)
 
