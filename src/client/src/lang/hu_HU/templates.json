@@ -1,0 +1,119 @@
+{
+  "Templates": "Sablonok",
+  "NoTemplates": "Még nincsenek itt sablonok",
+  "Deleted": "Sablon törölve",
+  "New": "Új sablon",
+  "Edit": "Sablon szerkesztése",
+  "Editor": "Szerkesztő",
+  "Json": "JSON",
+  "Display": "Megjelenítendő név",
+  "Type": "Típus",
+  "Variables": "Mezők",
+  "Install": "Telepítés",
+  "AddInstallStep": "Telepítési lépés hozzáadása",
+  "DeleteInstallStep": "Telepítési lépés törlése",
+  "Description": "Leírás",
+  "DataType": "Adattípus",
+  "DefaultValue": "Alapérték",
+  "Required": "Kötelező",
+  "UserEditable": "Felhasználók változtathatják",
+  "Value": "Érték",
+  "AddOption": "Opció hozzáadása",
+  "AddCommand": "Parancs hozzáadása",
+  "Filename": "Fájlnév",
+  "Content": "Tartalom",
+  "Source": "Forrás",
+  "Target": "Célpont",
+  "Version": "Verzió",
+  "ReleaseType": "A kiadás típusa",
+  "AddFile": "Fájl hozzáadása",
+  "AddVariable": "Mező hozzáadása",
+  "Environment": "Környezet",
+  "Environments": "Környezetek",
+  "AddEnvironment": "Környezet hozzáadása",
+  "DefaultEnvironment": "Alapértelmezett Környezet",
+  "AddEnvVar": "Új környezeti változó hozzáadása",
+  "EnvVars": "Környezeti változók",
+  "DockerImage": "Docker kép",
+  "SaveSuccess": "Sablon elmentve",
+  "VarNameNoSpaces": "A mező neve nem lehet üres és nem tartalmazhat szóközöket",
+  "SupportedEnvironments": "Támogatott környezetek",
+  "RunConfig": "Konfiguráció futtatása",
+  "PreHook": "Elődleges beavatkozási rutinok",
+  "PostHook": "Utólagos beavatkozási rutinok",
+  "AddPreStep": "Elődleges beavatkozási rutin hozzáadása",
+  "AddPostStep": "Utólagos beavatkozási rutin hozzáadása",
+  "DeletePreStep": "Elődleges beavatkozási rutin törlése",
+  "DeletePostStep": "Utólagos beavatkozási rutin törlése",
+  "Shutdown": "Leállítás",
+  "Command": "Parancs",
+  "WorkingDirectory": "Munkafelület",
+  "Arguments": "Argumentumok",
+  "AddArgument": "Argumentum hozzáadása",
+  "Convert": "Konvertálás",
+  "OfferV1Convert": "Ez a json sablon úgy néz ki, hogy a PufferPanel 1.x-es verziójához készült. Szeretnéd, hogy átkonvertáljuk ezt PufferPanel 2.x-es verzióra?",
+  "import": {
+    "CommunityWarning": "Ezeket a sablonokat a közösség készítette, és mindenféle garancia nélkül bocsátja rendelkezésre",
+    "OverrideWarning": "FIGYELEM: Az importált sablonok ÁTÍRNAK minden létező sablont, aminek egyező IDje van",
+    "Import": "Sablonok importálása",
+    "Tooltip": "Sablonok importálása a hivatalos adattárból",
+    "Select": "Válassza ki az importálandó sablonokat",
+    "Started": "Sablonok importálása, egy pillanat...",
+    "Successful": "A(z) {template} sablon sikeresen importálva",
+    "NoTemplatesTitle": "Szeretne sablonokat importálni?",
+    "NoTemplatesContent": "Jelenleg nincsen egy sablonja se. A szerverek felállításához viszont szükségesek.<br/>Szeretne a PufferPanel officiális adattárából egy pár sablont importálni?"
+  },
+  "stop": {
+    "Command": "Parancs",
+    "Signal": "Jel"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "Letöltés",
+      "files": "Fájlok"
+    },
+    "command": {
+      "ProcessorName": "Parancs Futtatása",
+      "commands": "Parancsok"
+    },
+    "alterfile": {
+      "ProcessorName": "Fájl megváltoztatása",
+      "regex": "Keresés alkalmazása, mint RegEx",
+      "search": "Keresendő szöveg",
+      "replace": "Csere erre"
+    },
+    "writefile": {
+      "ProcessorName": "Fájlba írás",
+      "text": "Tartalom"
+    },
+    "move": {
+      "ProcessorName": "Fájl áthelyezése",
+      "source": "Forrás",
+      "target": "Cél"
+    },
+    "mkdir": {
+      "ProcessorName": "Mappa létrehozása"
+    },
+    "mojangdl": {
+      "ProcessorName": "Minecraft Letöltése"
+    },
+    "forgedl": {
+      "ProcessorName": "Minecraft Forge Letöltése"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Minecraft SpongeForge Letöltése",
+      "releaseType": "Kiadás Típusa"
+    },
+    "fabricdl": {
+      "ProcessorName": "Minecraft Fabric Letöltése"
+    },
+    "javadl": {
+      "ProcessorName": "Java letöltése",
+      "version": "Java verzió telepítése (8, 16, 17)"
+    },
+    "steamgamedl": {
+      "ProcessorName": "Játék letöltése Steam-ről",
+      "appId": "Alkalmazásazonosító"
+    }
+  }
+}

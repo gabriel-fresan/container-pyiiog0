@@ -1,0 +1,22 @@
+{
+  "Node": "Node",
+  "Nodes": "Nodes",
+  "Edit": "-> Edit",
+  "Add": "Tambah Node",
+  "Update": "Perbarui node",
+  "Delete": "Hapus node",
+  "PublicHost": "Host publik",
+  "PublicPort": "Port Publik",
+  "PrivateHost": "Host pribadi",
+  "PrivatePort": "Port pribadi",
+  "SftpPort": "Port SFTP",
+  "WithPrivateAddress": "Gunakan host/port yang berbeda untuk komunikasi server ke server",
+  "WithPrivateAddressHint": "Alamat terpisah ini digunakan ketika simpul utama perlu berbicara dengan simpul baru. Berguna misalnya ketika node berada di jaringan yang sama di belakang NAT.",
+  "SaveConfig": "Simpan Config",
+  "SavePublicKey": "Simpan kunci publik",
+  "DeploymentInstruction": "Untuk menjalankan node, install PufferPanel di server baru dan taruh file configurasi di `/etc/pufferpanel/`<br/> Lalu restart server baru di PufferPanel",
+  "UpdateSuccess": "Node berhasil diupdate.",
+  "UpdateError": "Kesalahan saat memperbarui node",
+  "LocalNodeInstructions": "The local node is not editable through this screen. To change the host or port information, please update the `Master Url` in the settings.",
+  "CannotEdit": "Cannot Edit"
+}

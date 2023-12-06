@@ -1,3 +1,19 @@
+/*
+ Copyright 2016 Padduck, LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ 	http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package daemon
 
 import (
@@ -6,16 +22,16 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/go-co-op/gocron"
-	"github.com/gofrs/uuid/v5"
 	"github.com/gorilla/websocket"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
-	"github.com/pufferpanel/pufferpanel/v3/response"
-	"github.com/pufferpanel/pufferpanel/v3/servers"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/logging"
+	"github.com/pufferpanel/pufferpanel/v2/middleware"
+	"github.com/pufferpanel/pufferpanel/v2/programs"
+	"github.com/pufferpanel/pufferpanel/v2/response"
+	"github.com/satori/go.uuid"
 	"github.com/spf13/cast"
 	"io"
+	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -31,97 +47,96 @@ var wsupgrader = websocket.Upgrader{
 }
 
 func RegisterServerRoutes(e *gin.RouterGroup) {
-	l := e.Group("/server", middleware.IsPanelCaller)
+	l := e.Group("/server")
 	{
-		l.PUT("/:serverId", createServer)
-		l.DELETE("/:serverId", middleware.ResolveServerNode, deleteServer)
-		l.OPTIONS("/:serverId", response.CreateOptions("PUT", "DELETE", "GET"))
+		l.PUT("/:id", middleware.OAuth2Handler(pufferpanel.ScopeServersCreate, false), CreateServer)
+		l.DELETE("/:id", middleware.OAuth2Handler(pufferpanel.ScopeServersDelete, true), DeleteServer)
+		l.GET("/:id", middleware.OAuth2Handler(pufferpanel.ScopeServersEditAdmin, true), GetServerAdmin)
+		l.POST("/:id", middleware.OAuth2Handler(pufferpanel.ScopeServersEditAdmin, true), EditServerAdmin)
+		l.OPTIONS("/:id", response.CreateOptions("PUT", "DELETE", "GET"))
 
-		l.GET("/:serverId/definition", middleware.ResolveServerNode, getServerAdmin)
-		l.PUT("/:serverId/definition", middleware.ResolveServerNode, editServerAdmin)
-		l.OPTIONS("/:serverId/definition", response.CreateOptions("PUT", "DELETE", "GET"))
+		l.GET("/:id/data", middleware.OAuth2Handler(pufferpanel.ScopeServersEdit, true), GetServerData)
+		l.POST("/:id/data", middleware.OAuth2Handler(pufferpanel.ScopeServersEdit, true), EditServerData)
+		l.OPTIONS("/:id/data", response.CreateOptions("GET", "POST"))
 
-		l.GET("/:serverId/data", middleware.ResolveServerNode, getServerData)
-		l.POST("/:serverId/data", middleware.ResolveServerNode, editServerData)
-		l.OPTIONS("/:serverId/data", response.CreateOptions("GET", "POST"))
+		l.GET("/:id/tasks", middleware.OAuth2Handler(pufferpanel.ScopeServersEdit, true), GetServerTasks)
+		l.POST("/:id/tasks", middleware.OAuth2Handler(pufferpanel.ScopeServersEdit, true), CreateServerTask)
+		l.PUT("/:id/tasks/:taskId", middleware.OAuth2Handler(pufferpanel.ScopeServersEdit, true), EditServerTask)
+		l.DELETE("/:id/tasks/:taskId", middleware.OAuth2Handler(pufferpanel.ScopeServersEdit, true), DeleteServerTask)
+		l.OPTIONS("/:id/tasks", response.CreateOptions("GET", "POST", "PUT", "DELETE"))
 
-		l.GET("/:serverId/tasks", middleware.ResolveServerNode, getServerTasks)
-		l.OPTIONS("/:serverId/tasks", response.CreateOptions("GET"))
+		//l.POST("/:id/tasks/:taskId/run", middleware.OAuth2Handler(pufferpanel.ScopeServersEdit, true), RunServerTask)
+		l.OPTIONS("/:id/tasks/:taskId/run", response.CreateOptions("POST"))
 
-		l.GET("/:serverId/tasks/:taskId", middleware.ResolveServerNode, getServerTask)
-		l.PUT("/:serverId/tasks/:taskId", middleware.ResolveServerNode, editServerTask)
-		l.DELETE("/:serverId/tasks/:taskId", middleware.ResolveServerNode, deleteServerTask)
-		l.OPTIONS("/:serverId/tasks/:taskId", response.CreateOptions("GET", "PUT", "DELETE"))
+		l.POST("/:id/reload", middleware.OAuth2Handler(pufferpanel.ScopeServersEditAdmin, true), ReloadServer)
+		l.OPTIONS("/:id/reload", response.CreateOptions("POST"))
 
-		l.POST("/:serverId/tasks/:taskId/run", middleware.ResolveServerNode, runServerTask)
-		l.OPTIONS("/:serverId/tasks/:taskId/run", response.CreateOptions("POST"))
+		l.POST("/:id/start", middleware.OAuth2Handler(pufferpanel.ScopeServersStart, true), StartServer)
+		l.OPTIONS("/:id/start", response.CreateOptions("POST"))
 
-		l.POST("/:serverId/reload", middleware.ResolveServerNode, reloadServer)
-		l.OPTIONS("/:serverId/reload", response.CreateOptions("POST"))
+		l.POST("/:id/stop", middleware.OAuth2Handler(pufferpanel.ScopeServersStop, true), StopServer)
+		l.OPTIONS("/:id/stop", response.CreateOptions("POST"))
 
-		l.POST("/:serverId/start", middleware.ResolveServerNode, startServer)
-		l.OPTIONS("/:serverId/start", response.CreateOptions("POST"))
+		l.POST("/:id/kill", middleware.OAuth2Handler(pufferpanel.ScopeServersStop, true), KillServer)
+		l.OPTIONS("/:id/kill", response.CreateOptions("POST"))
 
-		l.POST("/:serverId/stop", middleware.ResolveServerNode, stopServer)
-		l.OPTIONS("/:serverId/stop", response.CreateOptions("POST"))
+		l.POST("/:id/install", middleware.OAuth2Handler(pufferpanel.ScopeServersInstall, true), InstallServer)
+		l.OPTIONS("/:id/install", response.CreateOptions("POST"))
 
-		l.POST("/:serverId/kill", middleware.ResolveServerNode, killServer)
-		l.OPTIONS("/:serverId/kill", response.CreateOptions("POST"))
+		l.GET("/:id/file/*filename", middleware.OAuth2Handler(pufferpanel.ScopeServersFilesGet, true), GetFile)
+		l.PUT("/:id/file/*filename", middleware.OAuth2Handler(pufferpanel.ScopeServersFilesPut, true), PutFile)
+		l.DELETE("/:id/file/*filename", middleware.OAuth2Handler(pufferpanel.ScopeServersFilesPut, true), DeleteFile)
+		l.POST("/:id/file/*filename", middleware.OAuth2Handler(pufferpanel.ScopeServersFilesPut, true), response.NotImplemented)
+		l.OPTIONS("/:id/file/*filename", response.CreateOptions("GET", "PUT", "DELETE", "POST"))
 
-		l.POST("/:serverId/install", middleware.ResolveServerNode, installServer)
-		l.OPTIONS("/:serverId/install", response.CreateOptions("POST"))
+		l.GET("/:id/console", middleware.OAuth2Handler(pufferpanel.ScopeServersConsole, true), GetLogs)
+		l.POST("/:id/console", middleware.OAuth2Handler(pufferpanel.ScopeServersConsoleSend, true), PostConsole)
+		l.OPTIONS("/:id/console", response.CreateOptions("GET", "POST"))
 
-		l.GET("/:serverId/file/*filename", middleware.ResolveServerNode, getFile)
-		l.PUT("/:serverId/file/*filename", middleware.ResolveServerNode, putFile)
-		l.DELETE("/:serverId/file/*filename", middleware.ResolveServerNode, deleteFile)
-		l.POST("/:serverId/file/*filename", middleware.ResolveServerNode, response.NotImplemented)
-		l.OPTIONS("/:serverId/file/*filename", response.CreateOptions("GET", "PUT", "DELETE", "POST"))
+		l.GET("/:id/stats", middleware.OAuth2Handler(pufferpanel.ScopeServersStat, true), GetStats)
+		l.OPTIONS("/:id/stats", response.CreateOptions("GET"))
 
-		l.GET("/:serverId/console", middleware.ResolveServerNode, getLogs)
-		l.POST("/:serverId/console", middleware.ResolveServerNode, postConsole)
-		l.OPTIONS("/:serverId/console", response.CreateOptions("GET", "POST"))
+		l.GET("/:id/status", middleware.OAuth2Handler(pufferpanel.ScopeServersView, true), GetStatus)
+		l.OPTIONS("/:id/status", response.CreateOptions("GET"))
 
-		l.GET("/:serverId/flags", middleware.ResolveServerNode, getFlags)
-		l.POST("/:serverId/flags", middleware.ResolveServerNode, setFlags)
-		l.OPTIONS("/:serverId/flags", response.CreateOptions("GET", "POST"))
-
-		l.GET("/:serverId/stats", middleware.ResolveServerNode, getStats)
-		l.OPTIONS("/:serverId/stats", response.CreateOptions("GET"))
-
-		l.GET("/:serverId/status", middleware.ResolveServerNode, getStatus)
-		l.OPTIONS("/:serverId/status", response.CreateOptions("GET"))
-
-		l.POST("/:serverId/archive/*filename", middleware.ResolveServerNode, archive)
-		l.GET("/:serverId/extract/*filename", middleware.ResolveServerNode, extract)
-
-		p := l.Group("/:serverId/socket")
-		{
-			p.GET("", middleware.ResolveServerNode, cors.New(cors.Config{
-				AllowAllOrigins:  true,
-				AllowCredentials: true,
-			}), openSocket)
-			p.Handle("CONNECT", "", func(c *gin.Context) {
-				c.Header("Access-Control-Allow-Origin", "*")
-				c.Header("Access-Control-Allow-Credentials", "false")
-			})
-			p.OPTIONS("", response.CreateOptions("GET", "CONNECT"))
-		}
+		l.POST("/:id/archive/*filename", middleware.OAuth2Handler(pufferpanel.ScopeServersFilesPut, true), Archive)
+		l.GET("/:id/extract/*filename", middleware.OAuth2Handler(pufferpanel.ScopeServersFilesPut, true), Extract)
 	}
+
+	p := e.Group("/socket")
+	{
+		p.GET("/:id", middleware.OAuth2Handler(pufferpanel.ScopeServersConsole, true), cors.New(cors.Config{
+			AllowAllOrigins:  true,
+			AllowCredentials: true,
+		}), OpenSocket)
+		p.Handle("CONNECT", "/:id", middleware.OAuth2Handler(pufferpanel.ScopeServersConsole, true), cors.New(cors.Config{
+			AllowAllOrigins:  true,
+			AllowCredentials: true,
+		}))
+		p.OPTIONS("/:id", response.CreateOptions("GET"))
+	}
+
+	l.POST("", middleware.OAuth2Handler(pufferpanel.ScopeServersCreate, false), CreateServer)
+	l.OPTIONS("", response.CreateOptions("POST"))
 }
 
-func getServerFromGin(c *gin.Context) *servers.Server {
-	return c.MustGet("program").(*servers.Server)
-}
+// @Summary Starts server
+// @Description Starts the given server
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "Server started"
+// @Success 202 {object} response.Empty "Start has been queued"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param wait query bool false "Wait for the operation to complete"
+// @Router /daemon/server/{id}/start [post]
+func StartServer(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 
-// @Summary Start server
-// @Description Start server
-// @Success 202 {object} nil
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/start [post]
-// @Security OAuth2Application[server.start]
-func startServer(c *gin.Context) {
-	server := getServerFromGin(c)
 	_, wait := c.GetQuery("wait")
 
 	if wait {
@@ -142,14 +157,21 @@ func startServer(c *gin.Context) {
 }
 
 // @Summary Stop server
-// @Description Stop server
-// @Success 202 {object} nil
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/stop [post]
-// @Security OAuth2Application[server.stop]
-func stopServer(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Description Stops the given server
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "Server stopped"
+// @Success 202 {object} response.Empty "Stop has been queued"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param wait query bool false "Wait for the operation to complete"
+// @Router /daemon/server/{id}/stop [post]
+func StopServer(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 
 	_, wait := c.GetQuery("wait")
 
@@ -165,18 +187,24 @@ func stopServer(c *gin.Context) {
 			c.Status(http.StatusNoContent)
 		}
 	} else {
-		c.Status(http.StatusAccepted)
+		c.Status(204)
 	}
 }
 
 // @Summary Kill server
-// @Description Kill server
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/kill [post]
-// @Security OAuth2Application[server.kill]
-func killServer(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Description Stops the given server forcefully
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "Server killed"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Router /daemon/server/{id}/kill [post]
+func KillServer(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 
 	err := server.Kill()
 	if response.HandleError(c, err, http.StatusInternalServerError) {
@@ -185,24 +213,32 @@ func killServer(c *gin.Context) {
 	}
 }
 
-// Already declared in panel routing
-func createServer(c *gin.Context) {
-	serverId := c.Param("serverId")
+// @Summary Create server
+// @Description Creates the server
+// @Accept json
+// @Produce json
+// @Success 200 {object} pufferpanel.ServerIdResponse "Server created"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param server body pufferpanel.Server true "Server to create"
+// @Router /daemon/server/{id} [put]
+func CreateServer(c *gin.Context) {
+	serverId := c.Param("id")
 	if serverId == "" {
-		id, err := uuid.NewV4()
-		if response.HandleError(c, err, http.StatusInternalServerError) {
-			return
-		}
+		id := uuid.NewV4()
 		serverId = id.String()
 	}
-	prg := servers.GetFromCache(serverId)
+	prg, _ := programs.Get(serverId)
 
 	if prg != nil {
 		response.HandleError(c, pufferpanel.ErrServerAlreadyExists, http.StatusConflict)
 		return
 	}
 
-	prg = servers.CreateProgram()
+	prg = programs.CreateProgram()
 	err := json.NewDecoder(c.Request.Body).Decode(prg)
 	if err != nil {
 		logging.Error.Printf("Error decoding JSON body: %s", err)
@@ -217,203 +253,153 @@ func createServer(c *gin.Context) {
 		return
 	}
 
-	if prg, err = servers.Create(prg); err != nil {
+	if err := programs.Create(prg); err != nil {
 		response.HandleError(c, err, http.StatusInternalServerError)
-		_ = servers.Delete(prg.Id())
+		_ = programs.Delete(prg.Id())
 		return
 	}
 
-	c.JSON(http.StatusOK, &pufferpanel.ServerIdResponse{Id: serverId})
+	if err := prg.Scheduler.LoadMap(prg.Tasks); err != nil {
+		response.HandleError(c, err, http.StatusInternalServerError)
+		_ = programs.Delete(prg.Id())
+		return
+	}
+
+	if err := prg.Scheduler.Start(); err != nil {
+		response.HandleError(c, err, http.StatusInternalServerError)
+		_ = programs.Delete(prg.Id())
+		return
+	}
+
+	c.JSON(200, &pufferpanel.ServerIdResponse{Id: serverId})
 }
 
-// Already declared in panel routing
-func deleteServer(c *gin.Context) {
-	server := getServerFromGin(c)
-
-	err := servers.Delete(server.Id())
+// @Summary Deletes server
+// @Description Deletes the given server
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "Server deleted"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Router /daemon/server/{id} [delete]
+func DeleteServer(c *gin.Context) {
+	item, _ := c.Get("server")
+	prg := item.(*programs.Program)
+	err := programs.Delete(prg.Id())
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 	} else {
 		c.Status(http.StatusNoContent)
 	}
 }
 
-// @Summary Install server
-// @Description Install server
-// @Success 202 {object} nil
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/install [post]
-// @Security OAuth2Application[server.install]
-func installServer(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Summary Installs server
+// @Description installs the given server
+// @Accept json
+// @Produce json
+// @Success 202 {object} response.Empty "Install has been queued"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param wait query bool false "Wait for the operation to complete"
+// @Router /daemon/server/{id}/install [post]
+func InstallServer(c *gin.Context) {
+	item, _ := c.Get("server")
+	prg := item.(*programs.Program)
 
 	_, wait := c.GetQuery("wait")
 
 	if wait {
-		err := server.Install()
+		err := prg.Install()
 		if response.HandleError(c, err, http.StatusInternalServerError) {
 		} else {
 			c.Status(http.StatusNoContent)
 		}
 	} else {
-		go func(p *servers.Server) {
+		go func(p *programs.Program) {
 			_ = p.Install()
-		}(server)
+		}(prg)
 
 		c.Status(http.StatusAccepted)
 	}
 }
 
-// Not documented in swagger as overridden on frontend
-func editServerData(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Summary Edit server data
+// @Description Edits the given server data
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "Server edited"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param data body pufferpanel.ServerData true "Server data"
+// @Router /daemon/server/{id}/data [post]
+func EditServerData(c *gin.Context) {
+	item, _ := c.Get("server")
+	prg := item.(*programs.Program)
 
-	var data map[string]interface{}
+	data := &pufferpanel.ServerData{}
 	err := json.NewDecoder(c.Request.Body).Decode(&data)
 	if response.HandleError(c, err, http.StatusBadRequest) {
 		return
 	}
 
-	err = server.EditData(data)
+	err = prg.EditData(data.Variables, isAdmin(c))
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 	} else {
 		c.Status(http.StatusNoContent)
 	}
 }
 
-// @Summary Get server tasks
-// @Description Get server tasks
-// @Success 200 {object} pufferpanel.ServerTasks
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/tasks [get]
-// @Security OAuth2Application[server.tasks.view]
-func getServerTasks(c *gin.Context) {
-	server := getServerFromGin(c)
-
-	result := pufferpanel.ServerTasks{
-		Tasks: make(map[string]pufferpanel.ServerTask),
-	}
-
-	for k, v := range server.Scheduler.Tasks {
-		result.Tasks[k] = pufferpanel.ServerTask{
-			Task: pufferpanel.Task{
-				Name:         v.Name,
-				CronSchedule: v.CronSchedule,
-				Description:  v.Description,
-			},
-			IsRunning: server.Scheduler.IsTaskRunning(k),
-		}
-	}
-
-	c.JSON(http.StatusOK, result)
-}
-
-// @Summary Get server task
-// @Description Get server task by id
-// @Success 200 {object} pufferpanel.ServerTask
-// @Param id path string true "Server ID"
-// @Param taskId path string true "Task ID"
-// @Router /api/servers/{id}/tasks/{taskId} [get]
-// @Security OAuth2Application[server.tasks.view]
-func getServerTask(c *gin.Context) {
-	server := getServerFromGin(c)
-
-	var result *pufferpanel.ServerTask
-
-	for k, v := range server.Scheduler.Tasks {
-		result = &pufferpanel.ServerTask{
-			Task:      v,
-			IsRunning: server.Scheduler.IsTaskRunning(k),
-		}
-	}
-
-	if result != nil {
-		c.JSON(http.StatusOK, result)
-	} else {
-		c.Status(http.StatusNotFound)
-	}
-}
-
-// @Summary Run server task
-// @Description Run a specific task
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param taskId path string true "Task ID"
-// @Router /api/servers/{id}/tasks/{taskId}/run [post]
-// @Security OAuth2Application[server.tasks.run]
-func runServerTask(c *gin.Context) {
-	server := getServerFromGin(c)
-
-	taskId := c.Param("taskId")
-
-	err := server.Scheduler.RunTask(taskId)
-	if errors.Is(err, gocron.ErrJobNotFoundWithTag) {
-		c.Status(http.StatusNotFound)
-		return
-	}
-	if response.HandleError(c, err, http.StatusInternalServerError) {
-		return
-	}
-	c.Status(http.StatusNoContent)
-}
-
-// @Summary Edit server task
-// @Description Edit server task by id
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param taskId path string true "Task ID"
-// @Param task body pufferpanel.Task true "Task definition"
-// @Router /api/servers/{id}/tasks/{taskId} [put]
-// @Security OAuth2Application[server.tasks.edit]
-func editServerTask(c *gin.Context) {
-	server := getServerFromGin(c)
-
-	taskId := c.Param("taskId")
+func CreateServerTask(c *gin.Context) {
+	item, _ := c.Get("server")
+	prg := item.(*programs.Program)
 
 	var task pufferpanel.Task
 	err := c.ShouldBindJSON(&task)
 	if response.HandleError(c, err, http.StatusBadRequest) {
 		return
 	}
-
-	err = server.Scheduler.RemoveTask(taskId)
-	if errors.Is(err, gocron.ErrJobNotFoundWithTag) {
-		err = nil
-	}
-	if response.HandleError(c, err, http.StatusInternalServerError) {
-		return
-	}
-
-	err = server.Scheduler.AddTask(taskId, task)
+	err = prg.Scheduler.Add(task)
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 	} else {
 		c.Status(http.StatusNoContent)
 	}
 }
 
-// @Summary Delete server task
-// @Description Delete server task by id
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param taskId path string true "Task ID"
-// @Router /api/servers/{id}/tasks/{taskId} [delete]
-// @Security OAuth2Application[server.tasks.delete]
-func deleteServerTask(c *gin.Context) {
-	server := getServerFromGin(c)
-
-	taskId := c.Param("taskId")
+func EditServerTask(c *gin.Context) {
+	item, _ := c.Get("server")
+	prg := item.(*programs.Program)
 
 	var task pufferpanel.Task
 	err := c.ShouldBindJSON(&task)
 	if response.HandleError(c, err, http.StatusBadRequest) {
 		return
 	}
-
-	err = server.Scheduler.RemoveTask(taskId)
-	if errors.Is(err, gocron.ErrJobNotFoundWithTag) {
-		c.Status(http.StatusNotFound)
+	err = prg.Scheduler.Remove(task.Name)
+	if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
+	err = prg.Scheduler.Add(task)
+	if response.HandleError(c, err, http.StatusInternalServerError) {
+	} else {
+		c.Status(http.StatusNoContent)
+	}
+}
+
+func DeleteServerTask(c *gin.Context) {
+	item, _ := c.Get("server")
+	prg := item.(*programs.Program)
+
+	taskName := c.Param("taskName")
+
+	err := prg.Scheduler.Remove(taskName)
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 	} else {
 		c.Status(http.StatusNoContent)
@@ -421,64 +407,95 @@ func deleteServerTask(c *gin.Context) {
 }
 
 // @Summary Reload server
-// @Description Reload server
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/reload [post]
-// @Security OAuth2Application[server.reload]
-func reloadServer(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Description Reloads the server from disk
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "Reloaded server"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Router /daemon/server/{id}/reload [post]
+func ReloadServer(c *gin.Context) {
+	item, _ := c.Get("server")
+	prg := item.(*programs.Program)
 
-	err := servers.Reload(server.Id())
+	err := programs.Reload(prg.Id())
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 	} else {
 		c.Status(http.StatusNoContent)
 	}
 }
 
-// @Summary Get server data
-// @Description Get server variables
-// @Success 200 {object} pufferpanel.ServerData
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/data [get]
-// @Security OAuth2Application[server.data.view]
-func getServerData(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Summary Gets server data
+// @Description Gets the given server data
+// @Accept json
+// @Produce json
+// @Success 200 {object} pufferpanel.ServerData "Data for this server"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Router /daemon/server/{id}/data [get]
+func GetServerData(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 
 	data := server.GetData()
 
-	var replacement = make(map[string]pufferpanel.Variable)
-	for k, v := range data {
-		if v.UserEditable {
-			replacement[k] = v
+	if !isAdmin(c) {
+		var replacement = make(map[string]pufferpanel.Variable)
+		for k, v := range data {
+			if v.UserEditable {
+				replacement[k] = v
+			}
 		}
+		data = replacement
 	}
 
-	c.JSON(http.StatusOK, &pufferpanel.ServerData{Variables: replacement, Groups: server.Groups})
+	c.JSON(200, &pufferpanel.ServerData{Variables: data})
 }
 
-// @Summary Get server definition
-// @Description Get server definition
-// @Success 200 {object} pufferpanel.Server
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/definition [get]
-// @Security OAuth2Application[server.definition.view]
-func getServerAdmin(c *gin.Context) {
-	server := getServerFromGin(c)
+func GetServerTasks(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 
-	c.JSON(http.StatusOK, &server.Server)
+	c.JSON(200, &pufferpanel.ServerTasks{Tasks: server.Tasks})
 }
 
-// @Summary Edit server definition
-// @Description Updates the server with a new definition
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param server body pufferpanel.Server true "New definition"
-// @Router /api/servers/{id}/definition [post]
-// @Security OAuth2Application[server.definition.edit]
-func editServerAdmin(c *gin.Context) {
-	prg := getServerFromGin(c)
-	server := &prg.Server
+// @Summary Gets server data as admin
+// @Description Gets the given server data from an admin's view
+// @Accept json
+// @Produce json
+// @Success 200 {object} pufferpanel.ServerDataAdmin "Data for this server"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Router /daemon/server/{id} [get]
+func GetServerAdmin(c *gin.Context) {
+	item, _ := c.MustGet("server").(*programs.Program)
+
+	c.JSON(200, &pufferpanel.ServerDataAdmin{Server: &item.Server})
+}
+
+// @Summary Updates a server
+// @Description Updates a server
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Router /daemon/server/{id} [post]
+func EditServerAdmin(c *gin.Context) {
+	item, _ := c.MustGet("server").(*programs.Program)
+	server := &item.Server
 
 	replacement := &pufferpanel.Server{}
 	err := c.BindJSON(replacement)
@@ -493,7 +510,7 @@ func editServerAdmin(c *gin.Context) {
 	//copy from request
 	server.CopyFrom(replacement)
 
-	err = servers.Save(prg.Id())
+	err = programs.Save(item.Id())
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 		//REVERT!!!!!!!
 		server.CopyFrom(backup)
@@ -507,17 +524,23 @@ func editServerAdmin(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// @Summary Get file/folder
-// @Description Gets a specific file or a list of files in a folder. This will either return
-// @Description a) A raw file if the path points to a valid file
-// @Description or b) An array of files for the folder contents
-// @Success 200 {object} nil
-// @Param id path string true "Server ID"
-// @Param filepath path string true "File path"
-// @Router /api/servers/{id}/file/{filepath} [get]
-// @Security OAuth2Application[server.files.view]
-func getFile(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Summary Get file/list
+// @Description Gets a file or a file list from the server
+// @Accept json
+// @Produce json
+// @Produce octet-stream
+// @Success 200 {object} string "File"
+// @Success 200 {object} messages.FileDesc "File List"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param filename path string true "File name"
+// @Router /daemon/server/{id}/file/{filename} [get]
+func GetFile(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 
 	targetPath := c.Param("filename")
 
@@ -530,7 +553,7 @@ func getFile(c *gin.Context) {
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			c.AbortWithStatus(http.StatusNotFound)
+			c.AbortWithStatus(404)
 		} else if err == pufferpanel.ErrIllegalFileAccess {
 			response.HandleError(c, err, http.StatusBadRequest)
 		} else {
@@ -540,7 +563,7 @@ func getFile(c *gin.Context) {
 	}
 
 	if data.FileList != nil {
-		c.JSON(http.StatusOK, data.FileList)
+		c.JSON(200, data.FileList)
 	} else if data.Contents != nil {
 		fileName := filepath.Base(data.Name)
 
@@ -556,22 +579,28 @@ func getFile(c *gin.Context) {
 	}
 }
 
-// @Summary Edit file
-// @Description Adds or edit a file, replacing the contents with the provided body
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param filepath path string true "File path"
-// @Param file formData file true "File contents"
-// @Accept multipart/form-data
-// @Router /api/servers/{id}/file/{filepath} [put]
-// @Security OAuth2Application[server.files.edit]
-func putFile(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Summary Put file/folder
+// @Description Puts a file or folder on the server
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "If file/folder was created"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param filename path string true "File name"
+// @Param folder path bool true "If this is a folder"
+// @Param file formData file false "File to place"
+// @Router /daemon/server/{id}/file/{filename} [put]
+func PutFile(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 
 	targetPath := c.Param("filename")
 
 	if targetPath == "" {
-		c.AbortWithStatus(http.StatusNotFound)
+		c.Status(404)
 		return
 	}
 
@@ -599,27 +628,30 @@ func putFile(c *gin.Context) {
 	file, err := server.OpenFile(targetPath)
 	defer pufferpanel.Close(file)
 	if response.HandleError(c, err, http.StatusInternalServerError) {
-		return
+	} else {
+		_, err = io.Copy(file, sourceFile)
+		if response.HandleError(c, err, http.StatusInternalServerError) {
+		} else {
+			c.Status(http.StatusNoContent)
+		}
 	}
-
-	_, err = io.Copy(file, sourceFile)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
-		return
-	}
-
-	c.Status(http.StatusNoContent)
 }
 
 // @Summary Delete file
-// @Description Deletes a file or folder.
-// @Description WARNING: This is a recursive operation, specifying a folder will delete all children
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param filepath path string true "File path"
-// @Router /api/servers/{id}/file/{filepath} [delete]
-// @Security OAuth2Application[server.files.edit]
-func deleteFile(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Description Deletes a file from the server
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "If file was deleted"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param filename path string true "File name"
+// @Router /daemon/server/{id}/file/{filename} [delete]
+func DeleteFile(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 
 	targetPath := c.Param("filename")
 
@@ -630,58 +662,68 @@ func deleteFile(c *gin.Context) {
 	}
 }
 
-// @Summary Send command
-// @Description Sends a command to the server
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param command body string true "Command"
-// @Router /api/servers/{id}/console [post]
-// @Security OAuth2Application[server.console.send]
-func postConsole(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Summary Run command
+// @Description Runs a command in the server
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "If command was ran"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param commands body string true "Command to run"
+// @Router /daemon/server/{id}/console [post]
+func PostConsole(c *gin.Context) {
+	item, _ := c.Get("server")
+	prg := item.(*programs.Program)
 
-	d, err := io.ReadAll(c.Request.Body)
-	if response.HandleError(c, err, http.StatusBadRequest) {
-		return
-	}
-
-	cmd, err := cast.ToStringE(d)
-	if response.HandleError(c, err, http.StatusBadRequest) {
-		return
-	}
-
-	err = server.Execute(cmd)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
-		return
-	}
-	c.Status(http.StatusNoContent)
-
-}
-
-// @Summary Get stats
-// @Description Gets the CPU and memory usage of the server
-// @Success 200 {object} pufferpanel.ServerStats
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/stats [get]
-// @Security OAuth2Application[server.stats]
-func getStats(c *gin.Context) {
-	server := getServerFromGin(c)
-
-	results, err := server.GetEnvironment().GetStats()
+	d, _ := ioutil.ReadAll(c.Request.Body)
+	cmd := string(d)
+	err := prg.Execute(cmd)
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 	} else {
-		c.JSON(http.StatusOK, results)
+		c.Status(http.StatusNoContent)
 	}
 }
 
-// @Summary Get logs
-// @Description Get the console logs for the server
-// @Success 200 {object} pufferpanel.ServerLogs
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/console [get]
-// @Security OAuth2Application[server.console]
-func getLogs(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Summary Gets server stats
+// @Description Gets the given server stats
+// @Accept json
+// @Produce json
+// @Success 200 {object} pufferpanel.ServerStats "Stats for this server"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Router /daemon/server/{id}/stats [get]
+func GetStats(c *gin.Context) {
+	item, _ := c.Get("server")
+	svr := item.(*programs.Program)
+
+	results, err := svr.GetEnvironment().GetStats()
+	if response.HandleError(c, err, http.StatusInternalServerError) {
+	} else {
+		c.JSON(200, results)
+	}
+}
+
+// @Summary Gets server logs
+// @Description Gets the given server logs since a certain time period
+// @Accept json
+// @Produce json
+// @Success 200 {object} pufferpanel.ServerLogs "Logs for this server"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param time query int false "Only get data from after this UNIX timestamp" default(0)
+// @Router /daemon/server/{id}/console [get]
+func GetLogs(c *gin.Context) {
+	item, _ := c.Get("server")
+	program := item.(*programs.Program)
 
 	time := c.DefaultQuery("time", "0")
 
@@ -691,48 +733,55 @@ func getLogs(c *gin.Context) {
 		return
 	}
 
-	console, epoch := server.GetEnvironment().GetConsoleFrom(castedTime)
+	console, epoch := program.GetEnvironment().GetConsoleFrom(castedTime)
+	msg := ""
+	for _, k := range console {
+		msg += k
+	}
 
-	c.JSON(http.StatusOK, &pufferpanel.ServerLogs{
+	c.JSON(200, &pufferpanel.ServerLogs{
 		Epoch: epoch,
-		Logs:  console,
+		Logs:  msg,
 	})
 }
 
-// @Summary Get status
-// @Description Get the server's status (is it running)
+// @Summary Gets server status
+// @Description Gets the given server status
+// @Accept json
+// @Produce json
 // @Success 200 {object} pufferpanel.ServerRunning
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/status [get]
-// @Security OAuth2Application[server.status]
-func getStatus(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Router /daemon/server/{id}/status [get]
+func GetStatus(c *gin.Context) {
+	item, _ := c.Get("server")
+	program := item.(*programs.Program)
 
-	installing := server.GetEnvironment().IsInstalling()
-
-	if installing {
-		c.JSON(http.StatusOK, &pufferpanel.ServerRunning{Installing: installing})
-		return
-	}
-
-	running, err := server.IsRunning()
+	running, err := program.IsRunning()
 
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 	} else {
-		c.JSON(http.StatusOK, &pufferpanel.ServerRunning{Running: running})
+		c.JSON(200, &pufferpanel.ServerRunning{Running: running})
 	}
 }
 
-// @Summary Create archive
-// @Description Creates an archive of files or folders
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param files body []string true "Files to archive"
-// @Param filename path string true "Archive name"
-// @Router /api/servers/{id}/archive/{filename} [post]
-// @Security OAuth2Application[server.files.edit]
-func archive(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Summary Archive file(s)
+// @Description Archives file(s) with the
+// @Accept json
+// @Success 204 {object} response.Empty "If file(s) was archived"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param filename path string true "Destination"
+// @Router /daemon/server/{id}/archive/{filename} [post]
+func Archive(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 	var files []string
 
 	if err := c.BindJSON(&files); response.HandleError(c, err, http.StatusBadRequest) {
@@ -751,16 +800,22 @@ func archive(c *gin.Context) {
 	}
 }
 
-// @Summary Extract archive
-// @Description Extracts an archive to the server
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param filename path string true "Target file to extract"
-// @Param destination query string true "Path to place files"
-// @Router /api/servers/{id}/extract/{filename} [post]
-// @Security OAuth2Application[server.files.edit]
-func extract(c *gin.Context) {
-	server := getServerFromGin(c)
+// @Summary Extract files
+// @Description Extracts files from an archive
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "If file was extracted"
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Empty
+// @Failure 404 {object} response.Empty
+// @Failure 500 {object} response.Error
+// @Param id path string true "Server Identifier"
+// @Param filename path string true "File name"
+// @Param destination path string true "Destination directory (URI Parameter)"
+// @Router /daemon/server/{id}/extract/{filename} [get]
+func Extract(c *gin.Context) {
+	item, _ := c.Get("server")
+	server := item.(*programs.Program)
 
 	targetPath := c.Param("filename")
 	destination := c.Query("destination")
@@ -772,72 +827,33 @@ func extract(c *gin.Context) {
 	}
 }
 
-// @Summary Get flags
-// @Description Get the management flags for a server
-// @Success 200 {object} pufferpanel.ServerFlags
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/flags [get]
-// @Security OAuth2Application[server.flags.view]
-func getFlags(c *gin.Context) {
-	server := getServerFromGin(c)
-
-	c.JSON(http.StatusOK, &pufferpanel.ServerFlags{
-		AutoStart:             &server.Execution.AutoStart,
-		AutoRestartOnCrash:    &server.Execution.AutoRestartFromCrash,
-		AutoRestartOnGraceful: &server.Execution.AutoRestartFromGraceful,
-	})
-}
-
-// @Summary Set flags
-// @Description Sets management flags for a server
-// @Success 204 {object} nil
-// @Param id path string true "Server ID"
-// @Param flags body pufferpanel.ServerFlags true "Flags to change"
-// @Router /api/servers/{id}/flags [post]
-// @Security OAuth2Application[server.flags.edit]
-func setFlags(c *gin.Context) {
-	server := getServerFromGin(c)
-
-	var req pufferpanel.ServerFlags
-	err := c.BindJSON(&req)
-	if response.HandleError(c, err, http.StatusBadRequest) {
-		return
-	}
-	if req.AutoRestartOnCrash != nil {
-		server.Execution.AutoRestartFromCrash = *req.AutoRestartOnCrash
-	}
-	if req.AutoRestartOnGraceful != nil {
-		server.Execution.AutoRestartFromGraceful = *req.AutoRestartOnGraceful
-	}
-	if req.AutoStart != nil {
-		server.Execution.AutoStart = *req.AutoStart
-	}
-	err = server.Save()
-	if response.HandleError(c, err, http.StatusInternalServerError) {
-		return
-	}
-	c.Status(http.StatusNoContent)
-}
-
-func openSocket(c *gin.Context) {
-	server := getServerFromGin(c)
+func OpenSocket(c *gin.Context) {
+	item, _ := c.Get("server")
+	program := item.(*programs.Program)
 
 	conn, err := wsupgrader.Upgrade(c.Writer, c.Request, nil)
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
 
+	internalMap, _ := c.Get("scopes")
+	scopes := internalMap.([]pufferpanel.Scope)
+
 	socket := pufferpanel.Create(conn)
 
-	if _, exists := c.GetQuery("console"); exists {
-		server.GetEnvironment().AddConsoleListener(socket)
-	}
+	go listenOnSocket(socket, program, scopes)
 
-	if _, exists := c.GetQuery("stats"); exists {
-		server.GetEnvironment().AddStatsListener(socket)
-	}
+	program.GetEnvironment().AddListener(socket)
+}
 
-	if _, exists := c.GetQuery("status"); exists {
-		server.GetEnvironment().AddStatusListener(socket)
+func isAdmin(c *gin.Context) bool {
+	o, _ := c.Get("scopes")
+	if scopes, ok := o.([]pufferpanel.Scope); ok {
+		for _, v := range scopes {
+			if v == pufferpanel.ScopeServersAdmin {
+				return true
+			}
+		}
 	}
+	return false
 }

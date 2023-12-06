@@ -1,14 +1,28 @@
+/*
+ Copyright 2016 Padduck, LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ 	http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package daemon
 
 import (
 	"context"
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/response"
-	"github.com/pufferpanel/pufferpanel/v3/servers"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/response"
 	"net/http"
-	"runtime"
 	"time"
 )
 
@@ -16,46 +30,46 @@ func RegisterDaemonRoutes(e *gin.RouterGroup) {
 	e.GET("", getStatusGET)
 	e.HEAD("", getStatusHEAD)
 	e.Handle("OPTIONS", "", response.CreateOptions("GET", "HEAD"))
-
 	e.GET("features", getFeatures)
-	e.Handle("OPTIONS", "features", response.CreateOptions("GET"))
 
 	RegisterServerRoutes(e)
 }
 
-// @Summary Check daemon status
-// @Description Check to see if the daemon is online or not
-// @Success 200 {object} pufferpanel.DaemonRunning
+// Root godoc
+// @Summary Is daemon up
+// @Description Easy way to tell if the daemon is running is by using this endpoint
+// @Accept json
+// @Produce json
+// @Success 200 {object} pufferpanel.DaemonRunning "Service running"
 // @Router /daemon [get]
-// @Security OAuth2Application[none]
 func getStatusGET(c *gin.Context) {
 	c.JSON(http.StatusOK, &pufferpanel.DaemonRunning{Message: "daemon is running"})
 }
 
-// @Summary Check daemon status
-// @Description Check to see if the daemon is online or not
-// @Success 204 {object} nil
+// @Summary Is daemon up
+// @Description Easy way to tell if the daemon is running is by using this endpoint
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty "Service running"
 // @Router /daemon [head]
-// @Security OAuth2Application[none]
 func getStatusHEAD(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// @Summary Get features of the node
-// @Description Gets the features that the node supports, like it's OS and environments
-// @Success 200 {object} Features
-// @Router /daemon/features [get]
-// @Security OAuth2Application[none]
+// @Summary Get supported features
+// @Description Gets a list of features supported by the node
+// @Accept json
+// @Produce json
+// @Success 200 {object} daemon.Features "Features"
+// @Router /daemon [head]
 func getFeatures(c *gin.Context) {
-	features := make([]string, 0)
-
-	envs := servers.GetSupportedEnvironments()
+	features := []string{}
 
 	if testDocker() {
 		features = append(features, "docker")
 	}
 
-	c.JSON(http.StatusOK, Features{Features: features, Environments: envs, OS: runtime.GOOS, Arch: runtime.GOARCH})
+	c.JSON(http.StatusOK, Features{Features: features})
 }
 
 func testDocker() bool {
@@ -68,12 +82,12 @@ func testDocker() bool {
 	defer cancel()
 
 	_, err = d.Ping(ctx)
-	return err == nil
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 type Features struct {
-	Features     []string `json:"features"`
-	Environments []string `json:"environments"`
-	OS           string   `json:"os"`
-	Arch         string   `json:"arch"`
-} //@name Features
+	Features []string `json:"features"`
+}

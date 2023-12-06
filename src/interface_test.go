@@ -1,3 +1,16 @@
+/*
+ Copyright 2020 Padduck, LLC
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  	http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+
 package pufferpanel
 
 import (
@@ -36,51 +49,41 @@ func TestToStringArray(t *testing.T) {
 		args args
 		want wants
 	}{
-		{
+		/*{
 			name: "Test null input",
 			args: args{
 				element: nil,
 			},
-			want: wants{
-				result: []string{},
-			},
+			want: []string{},
 		},
 		{
 			name: "Test empty input",
 			args: args{
 				element: make([]string, 0),
 			},
-			want: wants{
-				result: []string{},
-			},
+			want: make([]string, 0),
 		},
 		{
 			name: "Test all valid input",
 			args: args{
 				element: interfaceStringArray,
 			},
-			want: wants{
-				result: interfaceStringArray,
-			},
+			want: interfaceStringArray,
 		},
 		{
 			name: "Test mixed input",
 			args: args{
 				element: interfaceObjectArray,
 			},
-			want: wants{
-				result: interfaceStringArray,
-			},
+			want: interfaceStringArray,
 		},
 		{
 			name: "Test single string input",
 			args: args{
 				element: "test",
 			},
-			want: wants{
-				result: []string{"test"},
-			},
-		},
+			want: []string{"test"},
+		},*/
 		{
 			name: "Test invalid type",
 			args: args{

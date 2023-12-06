@@ -1,14 +1,28 @@
+/*
+ Copyright 2020 Padduck, LLC
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  	http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+
 package logging
 
 import (
-	"github.com/pufferpanel/pufferpanel/v3/config"
+	"github.com/pufferpanel/pufferpanel/v2/config"
 	"io"
 	"log"
 	"os"
 	"path"
+	"time"
 )
 
-var rotation *Rotator
+var logFile io.WriteCloser
 var flags = log.LstdFlags
 
 var Error = log.New(os.Stderr, "[ERROR] ", flags)
@@ -27,28 +41,25 @@ func Initialize(useFiles bool) {
 			panic(err)
 		}
 
-		logFile, err := os.OpenFile(path.Join(directory, "pufferpanel.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+		logFile, err = os.OpenFile(path.Join(directory, time.Now().Format("2006-01-02T15-04-05")+".log"), os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			panic(err)
 		}
-
-		rotation = &Rotator{backer: logFile}
-		rotation.StartRotation(directory)
 	}
 
 	//just create them ourselves.....
 
 	//first, create STDERR
 
-	stderr := MultiWriter(rotation, os.Stderr, CreateServiceLogger("error"))
+	stderr := MultiWriter(logFile, os.Stderr, CreateServiceLogger("error"))
 	Error = log.New(stderr, "[ERROR] ", flags)
 
 	//now, STDOUT
-	stdout := MultiWriter(rotation, os.Stdout, CreateServiceLogger("info"))
+	stdout := MultiWriter(logFile, os.Stdout, CreateServiceLogger("info"))
 	Info = log.New(stdout, "[INFO] ", flags)
 
 	//and now, a DEBUG
-	stddebug := MultiWriter(rotation, os.Stdout)
+	stddebug := MultiWriter(logFile, os.Stdout)
 	Debug = log.New(stddebug, "[DEBUG] ", flags)
 
 	log.SetOutput(Info.Writer())
@@ -70,7 +81,7 @@ func Initialize(useFiles bool) {
 }
 
 func Close() {
-	if rotation != nil {
-		_ = rotation.Close()
+	if logFile != nil {
+		_ = logFile.Close()
 	}
 }

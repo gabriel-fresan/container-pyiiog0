@@ -1,0 +1,119 @@
+{
+  "Templates": "Sjablonen",
+  "NoTemplates": "Er zijn nog geen sjablonen",
+  "Deleted": "Sjabloon verwijderd",
+  "New": "Nieuw sjabloon aanmaken",
+  "Edit": "Bewerkt sjabloon",
+  "Editor": "Bewerken",
+  "Json": "JSON",
+  "Display": "Naam",
+  "Type": "Soort",
+  "Variables": "Variabelen",
+  "Install": "Installeren",
+  "AddInstallStep": "Installatie stap toevoegen",
+  "DeleteInstallStep": "Installatiestap verwijderen",
+  "Description": "Beschrijving",
+  "DataType": "Type gegevens",
+  "DefaultValue": "Standaard waarde",
+  "Required": "Verplicht",
+  "UserEditable": "Gebruikers kunnen bewerken",
+  "Value": "Waarde",
+  "AddOption": "Een optie toevoegen",
+  "AddCommand": "Voeg een commando toe",
+  "Filename": "Bestandsnaam",
+  "Content": "Inhoud",
+  "Source": "Bron",
+  "Target": "Doel",
+  "Version": "Versie",
+  "ReleaseType": "Versienummer",
+  "AddFile": "Bestand toevoegen",
+  "AddVariable": "Variabele toevoegen",
+  "Environment": "Omgeving",
+  "Environments": "Omgeving",
+  "AddEnvironment": "Omgeving toevoegen",
+  "DefaultEnvironment": "Standaard omgeving",
+  "AddEnvVar": "Voeg nieuwe variabele",
+  "EnvVars": "Omgevingsvariabelen",
+  "DockerImage": "Docker afbeelding",
+  "SaveSuccess": "Opgeslagen Templates",
+  "VarNameNoSpaces": "Een variabelenaam mag niet leeg zijn of spaties bevatten",
+  "SupportedEnvironments": "Ondersteunde Omgevingen",
+  "RunConfig": "Configuratie starten",
+  "PreHook": "Pre Run Hook",
+  "PostHook": "Laad Run Hook",
+  "AddPreStep": "Voeg Pre Run Stap toe",
+  "AddPostStep": "Voeg post-run-stap toe",
+  "DeletePreStep": "Verwijder Pre Run Stap",
+  "DeletePostStep": "Verwijder post-run-stap",
+  "Shutdown": "Afsluiten",
+  "Command": "Commando",
+  "WorkingDirectory": "Werkmap",
+  "Arguments": "Parameters",
+  "AddArgument": "Argument toevoegen",
+  "Convert": "Converteer",
+  "OfferV1Convert": "Deze template json ziet eruit als een template voor PufferPanel 1.x, wilt u dit automatisch omzetten naar een template voor PufferPanel 2.x?",
+  "import": {
+    "CommunityWarning": "Deze sjablonen worden gemaakt door de gemeenschap en geleverd zonder enige garanties",
+    "OverrideWarning": "WAARSCHUWING: Geimporteerde templates overschrijven bestaande sjablonen met dezelfde ID",
+    "Import": "Sjabloon importeren",
+    "Tooltip": "Sjablonen importeren uit de officiële repository",
+    "Select": "Selecteer sjablonen om te importeren",
+    "Started": "Sjablonen importeren, even geduld a.u.b",
+    "Successful": "Sjabloon {template} succesvol geïmporteerd",
+    "NoTemplatesTitle": "Wilt u templates importeren?",
+    "NoTemplatesContent": "U heeft momenteel geen sjablonen. Sjablonen zijn noodzakelijk om servers aan te maken.<br/>Wilt u nu enkele sjablonen importeren uit de officiële PufferPanel templates?"
+  },
+  "stop": {
+    "Command": "Commando",
+    "Signal": "Signaal"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "Downloaden",
+      "files": "Bestanden"
+    },
+    "command": {
+      "ProcessorName": "Opdrachten uitvoeren",
+      "commands": "Commando‘s"
+    },
+    "alterfile": {
+      "ProcessorName": "Bestand wijzigen",
+      "regex": "Behandel zoeken als RegEx",
+      "search": "Tekst zoeken",
+      "replace": "Vervangen door"
+    },
+    "writefile": {
+      "ProcessorName": "Schrijf naar bestand",
+      "text": "Inhoud"
+    },
+    "move": {
+      "ProcessorName": "Bestanden verplaatsen",
+      "source": "Bron",
+      "target": "Doel"
+    },
+    "mkdir": {
+      "ProcessorName": "Map aanmaken"
+    },
+    "mojangdl": {
+      "ProcessorName": "Download Minecraft"
+    },
+    "forgedl": {
+      "ProcessorName": "Download Minecraft Forge"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Download Minecraft SpongeForge",
+      "releaseType": "Versietype"
+    },
+    "fabricdl": {
+      "ProcessorName": "Download Minecraft Fabric"
+    },
+    "javadl": {
+      "ProcessorName": "Download Java",
+      "version": "Version of Java to install (8, 16, 17)"
+    },
+    "steamgamedl": {
+      "ProcessorName": "Download Game from Steam",
+      "appId": "App Id"
+    }
+  }
+}

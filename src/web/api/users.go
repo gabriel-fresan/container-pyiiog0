@@ -1,41 +1,57 @@
+/*
+ Copyright 2018 Padduck, LLC
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 	http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
-	"github.com/pufferpanel/pufferpanel/v3/models"
-	"github.com/pufferpanel/pufferpanel/v3/response"
-	"github.com/pufferpanel/pufferpanel/v3/services"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/middleware"
+	"github.com/pufferpanel/pufferpanel/v2/middleware/handlers"
+	"github.com/pufferpanel/pufferpanel/v2/models"
+	"github.com/pufferpanel/pufferpanel/v2/response"
+	"github.com/pufferpanel/pufferpanel/v2/services"
 	"github.com/spf13/cast"
+	"gorm.io/gorm"
 	"net/http"
 )
 
 func registerUsers(g *gin.RouterGroup) {
-	g.Handle("GET", "", middleware.RequiresPermission(pufferpanel.ScopeUserInfoSearch), searchUsers)
-	g.Handle("POST", "", middleware.RequiresPermission(pufferpanel.ScopeUserInfoEdit), createUser)
+	g.Handle("GET", "", handlers.OAuth2Handler(pufferpanel.ScopeUsersView, false), searchUsers)
+	g.Handle("POST", "", handlers.OAuth2Handler(pufferpanel.ScopeUsersEdit, false), createUser)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET", "POST"))
 
-	g.Handle("GET", "/:id", middleware.RequiresPermission(pufferpanel.ScopeUserInfoView), getUser)
-	g.Handle("POST", "/:id", middleware.RequiresPermission(pufferpanel.ScopeUserInfoEdit), updateUser)
-	g.Handle("DELETE", "/:id", middleware.RequiresPermission(pufferpanel.ScopeUserInfoEdit), deleteUser)
+	g.Handle("GET", "/:id", handlers.OAuth2Handler(pufferpanel.ScopeUsersView, false), getUser)
+	g.Handle("POST", "/:id", handlers.OAuth2Handler(pufferpanel.ScopeUsersEdit, false), updateUser)
+	g.Handle("DELETE", "/:id", handlers.OAuth2Handler(pufferpanel.ScopeUsersEdit, false), deleteUser)
 	g.Handle("OPTIONS", "/:id", response.CreateOptions("GET", "POST", "DELETE"))
 
-	g.Handle("GET", "/:id/perms", middleware.RequiresPermission(pufferpanel.ScopeUserPermsView), getUserPerms)
-	g.Handle("PUT", "/:id/perms", middleware.RequiresPermission(pufferpanel.ScopeUserPermsEdit), setUserPerms)
+	g.Handle("GET", "/:id/perms", handlers.OAuth2Handler(pufferpanel.ScopeUsersView, false), getUserPerms)
+	g.Handle("PUT", "/:id/perms", handlers.OAuth2Handler(pufferpanel.ScopeUsersEdit, false), setUserPerms)
 	g.Handle("OPTIONS", "/:id/perms", response.CreateOptions("PUT", "GET"))
 }
 
 // @Summary Get users
 // @Description Gets users, and allowing for filtering of users. * is a wildcard that can be used for text inputs
+// @Accept json
+// @Produce json
 // @Success 200 {object} models.UserSearchResponse
-// @Failure 400 {object} pufferpanel.ErrorResponse
-// @Failure 403 {object} pufferpanel.ErrorResponse
-// @Failure 404 {object} pufferpanel.ErrorResponse
-// @Failure 500 {object} pufferpanel.ErrorResponse
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Error
+// @Failure 404 {object} response.Error
+// @Failure 500 {object} response.Error
 // @Param body body models.UserSearch true "Filters to search on"
 // @Router /api/users [get]
-// @Security OAuth2Application[users.info.search]
 func searchUsers(c *gin.Context) {
 	var err error
 	db := middleware.GetDatabase(c)
@@ -51,7 +67,7 @@ func searchUsers(c *gin.Context) {
 		search.PageLimit = MaxPageSize
 	}
 
-	var results []*models.User
+	var results *models.Users
 	var total int64
 	if results, total, err = us.Search(search.Username, search.Email, search.PageLimit, search.Page); response.HandleError(c, err, http.StatusInternalServerError) {
 		return
@@ -59,7 +75,7 @@ func searchUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, &models.UserSearchResponse{
 		Users: models.FromUsers(results),
-		Metadata: &pufferpanel.Metadata{Paging: &pufferpanel.Paging{
+		Metadata: &response.Metadata{Paging: &response.Paging{
 			Page:    search.Page,
 			Size:    search.PageLimit,
 			MaxSize: MaxPageSize,
@@ -69,14 +85,15 @@ func searchUsers(c *gin.Context) {
 }
 
 // @Summary Create user
+// @Accept json
+// @Produce json
 // @Success 200 {object} models.UserView
-// @Failure 400 {object} pufferpanel.ErrorResponse
-// @Failure 403 {object} pufferpanel.ErrorResponse
-// @Failure 404 {object} pufferpanel.ErrorResponse
-// @Failure 500 {object} pufferpanel.ErrorResponse
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Error
+// @Failure 404 {object} response.Error
+// @Failure 500 {object} response.Error
 // @Param body body models.UserView true "New user information"
 // @Router /api/users [post]
-// @Security OAuth2Application[users.info.edit]
 func createUser(c *gin.Context) {
 	var err error
 	db := middleware.GetDatabase(c)
@@ -109,14 +126,15 @@ func createUser(c *gin.Context) {
 }
 
 // @Summary Get a user
+// @Accept json
+// @Produce json
 // @Success 200 {object} models.UserView
-// @Failure 400 {object} pufferpanel.ErrorResponse
-// @Failure 403 {object} pufferpanel.ErrorResponse
-// @Failure 404 {object} pufferpanel.ErrorResponse
-// @Failure 500 {object} pufferpanel.ErrorResponse
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Error
+// @Failure 404 {object} response.Error
+// @Failure 500 {object} response.Error
 // @Param id path uint true "User ID"
 // @Router /api/users/{id} [get]
-// @Security OAuth2Application[users.info.view]
 func getUser(c *gin.Context) {
 	db := middleware.GetDatabase(c)
 	us := &services.User{DB: db}
@@ -129,7 +147,10 @@ func getUser(c *gin.Context) {
 	}
 
 	user, err := us.GetById(id)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
+	if err != nil && err == gorm.ErrRecordNotFound {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	} else if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
 
@@ -137,15 +158,16 @@ func getUser(c *gin.Context) {
 }
 
 // @Summary Update user
-// @Success 204 {object} nil
-// @Failure 400 {object} pufferpanel.ErrorResponse
-// @Failure 403 {object} pufferpanel.ErrorResponse
-// @Failure 404 {object} pufferpanel.ErrorResponse
-// @Failure 500 {object} pufferpanel.ErrorResponse
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Error
+// @Failure 404 {object} response.Error
+// @Failure 500 {object} response.Error
 // @Param id path uint true "User ID"
 // @Param body body models.UserView true "New user information"
 // @Router /api/users/{id} [post]
-// @Security OAuth2Application[users.info.edit]
 func updateUser(c *gin.Context) {
 	db := middleware.GetDatabase(c)
 	us := &services.User{DB: db}
@@ -167,7 +189,10 @@ func updateUser(c *gin.Context) {
 	}
 
 	user, err := us.GetById(id)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
+	if err != nil && err == gorm.ErrRecordNotFound {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	} else if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
 
@@ -181,14 +206,15 @@ func updateUser(c *gin.Context) {
 }
 
 // @Summary Delete user
-// @Success 204 {object} nil
-// @Failure 400 {object} pufferpanel.ErrorResponse
-// @Failure 403 {object} pufferpanel.ErrorResponse
-// @Failure 404 {object} pufferpanel.ErrorResponse
-// @Failure 500 {object} pufferpanel.ErrorResponse
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Error
+// @Failure 404 {object} response.Error
+// @Failure 500 {object} response.Error
 // @Param id path uint true "User ID"
 // @Router /api/users/{id} [delete]
-// @Security OAuth2Application[users.info.edit]
 func deleteUser(c *gin.Context) {
 	db := middleware.GetDatabase(c)
 	us := &services.User{DB: db}
@@ -201,7 +227,10 @@ func deleteUser(c *gin.Context) {
 	}
 
 	user, err := us.GetById(id)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
+	if err != nil && err == gorm.ErrRecordNotFound {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	} else if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
 
@@ -213,14 +242,15 @@ func deleteUser(c *gin.Context) {
 }
 
 // @Summary Gets user permissions
+// @Accept json
+// @Produce json
 // @Success 200 {object} models.PermissionView
-// @Failure 400 {object} pufferpanel.ErrorResponse
-// @Failure 403 {object} pufferpanel.ErrorResponse
-// @Failure 404 {object} pufferpanel.ErrorResponse
-// @Failure 500 {object} pufferpanel.ErrorResponse
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Error
+// @Failure 404 {object} response.Error
+// @Failure 500 {object} response.Error
 // @Param id path uint true "User ID"
 // @Router /api/users/{id}/perms [get]
-// @Security OAuth2Application[users.perms.view]
 func getUserPerms(c *gin.Context) {
 	db := middleware.GetDatabase(c)
 	us := &services.User{DB: db}
@@ -234,7 +264,10 @@ func getUserPerms(c *gin.Context) {
 	}
 
 	user, err := us.GetById(id)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
+	if err != nil && err == gorm.ErrRecordNotFound {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	} else if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
 
@@ -247,15 +280,16 @@ func getUserPerms(c *gin.Context) {
 }
 
 // @Summary Sets user permissions
-// @Success 204 {object} nil
-// @Failure 400 {object} pufferpanel.ErrorResponse
-// @Failure 403 {object} pufferpanel.ErrorResponse
-// @Failure 404 {object} pufferpanel.ErrorResponse
-// @Failure 500 {object} pufferpanel.ErrorResponse
+// @Accept json
+// @Produce json
+// @Success 204 {object} response.Empty
+// @Failure 400 {object} response.Error
+// @Failure 403 {object} response.Error
+// @Failure 404 {object} response.Error
+// @Failure 500 {object} response.Error
 // @Param id path uint true "User ID"
 // @Param body body models.PermissionView true "New permissions"
 // @Router /api/users/{id}/perms [put]
-// @Security OAuth2Application[users.perms.edit]
 func setUserPerms(c *gin.Context) {
 	db := middleware.GetDatabase(c)
 	us := &services.User{DB: db}
@@ -275,7 +309,10 @@ func setUserPerms(c *gin.Context) {
 	}
 
 	user, err := us.GetById(id)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
+	if err != nil && err == gorm.ErrRecordNotFound {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	} else if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
 
@@ -284,22 +321,7 @@ func setUserPerms(c *gin.Context) {
 		return
 	}
 
-	//get the current user's scopes
-	editorUser := c.MustGet("user").(*models.User)
-	editorPerms, err := ps.GetForUserAndServer(editorUser.ID, nil)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
-		return
-	}
-
-	//admins can override, so skip our comparers
-	if pufferpanel.ContainsScope(editorPerms.Scopes, pufferpanel.ScopeAdmin) {
-		perms.Scopes = viewModel.Scopes
-	} else {
-		allowedScopes := pufferpanel.Union(viewModel.Scopes, editorPerms.Scopes)
-		//update perms to match this "setup", but not stomp over what the user can't change
-		replacement := pufferpanel.UpdateScopesWhereGranted(perms.Scopes, allowedScopes, editorPerms.Scopes)
-		perms.Scopes = replacement
-	}
+	viewModel.CopyTo(perms, true)
 
 	err = ps.UpdatePermissions(perms)
 	if response.HandleError(c, err, http.StatusInternalServerError) {

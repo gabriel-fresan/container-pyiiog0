@@ -3,19 +3,20 @@
 *.prof
 .idea/
 *.iml
-*.pem
 .DS_Store
+
 
 logs/
 config.json
+*/node_modules/*
 vendor/
 client/dist/
-!client/dist/webfiles.go
+*.pem
 client/node_modules/
-web/swagger/
+web/swagger/swagger.json
+web/swagger/swagger.yaml
 .vs/
+email/
 www/
-
 operations/spongedl/cache/
 operations/spongedl/mods/
-operations/spongedl/*.jar

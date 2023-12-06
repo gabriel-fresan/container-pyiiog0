@@ -1,10 +1,26 @@
+/*
+ Copyright 2018 Padduck, LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ 	http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package sftp
 
 import (
 	"errors"
 	"fmt"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/logging"
 	"io"
 	"os"
 	"path/filepath"
@@ -76,7 +92,7 @@ func (rp requestPrefix) Filecmd(request *sftp.Request) error {
 			return os.Remove(sourceName)
 		}
 	default:
-		return fmt.Errorf("unknown request method: %v", request.Method)
+		return errors.New(fmt.Sprintf("Unknown request method: %v", request.Method))
 	}
 }
 
@@ -89,14 +105,23 @@ func (rp requestPrefix) Filelist(request *sftp.Request) (sftp.ListerAt, error) {
 	switch request.Method {
 	case "List":
 		{
-			files, err := os.ReadDir(sourceName)
+			file, err := os.Open(sourceName)
+			if err != nil {
+				return nil, rp.maskError(err)
+			}
+			files, err := file.Readdir(0)
 			if err != nil {
 				return nil, err
+			}
+			err = file.Close()
+			if err != nil {
+				return nil, rp.maskError(err)
 			}
 
 			//validate any symlinks are valid
 			files = pufferpanel.RemoveInvalidSymlinks(files, sourceName, rp.prefix)
-			return toListerAt(files), nil
+
+			return listerat(files), nil
 		}
 	case "Stat":
 		{
@@ -146,7 +171,7 @@ func (rp requestPrefix) Filelist(request *sftp.Request) (sftp.ListerAt, error) {
 			return listerat([]os.FileInfo{fi}), nil
 		}
 	default:
-		return nil, fmt.Errorf("unknown request method: %s", request.Method)
+		return nil, errors.New(fmt.Sprintf("Unknown request method: %s", request.Method))
 	}
 }
 
@@ -162,7 +187,7 @@ func (rp requestPrefix) getFile(path string, flags int, mode os.FileMode) (*os.F
 	var file *os.File
 
 	if flags&os.O_CREATE != 0 {
-		_, err = os.Stat(filePath)
+		_, err := os.Stat(filePath)
 		if os.IsNotExist(err) {
 			err = nil
 			err = os.MkdirAll(folderPath, 0755)
@@ -219,19 +244,6 @@ func (rp requestPrefix) maskError(err error) error {
 }
 
 type listerat []os.FileInfo
-
-func toListerAt(entries []os.DirEntry) listerat {
-	result := listerat{}
-
-	for _, v := range entries {
-		fi, err := v.Info()
-		if err == nil {
-			result = append(result, fi)
-		}
-	}
-
-	return result
-}
 
 // Modeled after strings.Reader's ReadAt() implementation
 func (f listerat) ListAt(ls []os.FileInfo, offset int64) (int, error) {

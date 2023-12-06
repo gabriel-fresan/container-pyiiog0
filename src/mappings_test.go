@@ -1,7 +1,19 @@
+/*
+ Copyright 2020 Padduck, LLC
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  	http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+
 package pufferpanel
 
 import (
-	"github.com/spf13/cast"
 	"reflect"
 	"testing"
 )
@@ -221,7 +233,7 @@ func TestGetStringArrayOrNull(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want interface{}
+		want []string
 	}{
 		{
 			name: "Test for valid string array",
@@ -243,9 +255,9 @@ func TestGetStringArrayOrNull(t *testing.T) {
 			name: "Test for invalid type",
 			args: args{
 				data: mappingTest,
-				key:  mappingIntArrayKey,
+				key:  mappingMapKey,
 			},
-			want: cast.ToStringSlice(mappingIntArrayVal),
+			want: nil,
 		},
 		{
 			name: "Test for invalid type mix",
@@ -258,8 +270,7 @@ func TestGetStringArrayOrNull(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GetStringArrayOrNull(tt.args.data, tt.args.key)
-			if !(got == nil && tt.want == nil) && !reflect.DeepEqual(got, tt.want) {
+			if got := GetStringArrayOrNull(tt.args.data, tt.args.key); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetStringArrayOrNull() = %v, want %v", got, tt.want)
 			}
 		})

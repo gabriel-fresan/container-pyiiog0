@@ -11,7 +11,9 @@
   },
   "daemon": {
     "data": {
-      "root": "/var/lib/pufferpanel"
+      "cache": "/var/lib/pufferpanel/cache",
+      "servers": "/var/lib/pufferpanel/servers",
+      "binaries": "/var/lib/pufferpanel/binaries"
     }
   },
   "web": {

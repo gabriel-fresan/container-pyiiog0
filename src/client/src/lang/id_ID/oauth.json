@@ -1,0 +1,15 @@
+{
+  "Credentials": "Kredensial Klien OAuth2",
+  "ClientId": "ID Klien",
+  "ClientSecret": "Client Secret",
+  "NewClientWarning": "Catat client secret, setelah menutup dialog ini tidak akan pernah ditampilkan lagi. Kehilangan atau lupa itu akan membuat klien ini benar -benar tidak dapat digunakan.",
+  "Create": "Buat klien OAuth2 baru",
+  "UnnamedClient": "Tidak bernama Klien OAuth2",
+  "Docs": "Lihat dokumentasi API disini",
+  "DeleteWarning": "Menghapus klien OAuth2 tidak dapat dibatalkan dan klien baru tidak dapat dibuat dengan kredensial yang sama. Semua integrasi masih menggunakan klien ini akan pecah setelah penghapusannya.",
+  "ConfirmDelete": "Saya menyadari efek yang menghapus klien OAuth2 ini akan dan tetap ingin melanjutkan.",
+  "Delete": "Menghapus {clientName}?",
+  "Clients": "Klien OAuth2",
+  "AccountDescription": "Klien OAuth2 yang tercantum di sini mewarisi semua izin akun mu",
+  "ServerDescription": "Klien OAuth2 yang tercantum di sini hanya mewarisi izin akun mu di server ini"
+}

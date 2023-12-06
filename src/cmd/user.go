@@ -1,13 +1,26 @@
+/*
+ Copyright 2020 Padduck, LLC
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  	http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+
 package main
 
 import (
 	"errors"
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/database"
-	"github.com/pufferpanel/pufferpanel/v3/models"
-	"github.com/pufferpanel/pufferpanel/v3/services"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/database"
+	"github.com/pufferpanel/pufferpanel/v2/models"
+	"github.com/pufferpanel/pufferpanel/v2/services"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
@@ -123,23 +136,21 @@ func addUser(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		us := &services.User{DB: tx}
+		us := &services.User{DB: db}
 		err = us.Create(user)
 		if err != nil {
 			fmt.Printf("Failed to create user: %s\n", err.Error())
 			return err
 		}
 
-		ps := &services.Permission{DB: tx}
+		ps := &services.Permission{DB: db}
 		perms, err := ps.GetForUserAndServer(user.ID, nil)
 		if err != nil {
 			fmt.Printf("Failed to get permissions: %s\n", err.Error())
 			return err
 		}
-
-		if answers.Admin {
-			perms.Scopes = pufferpanel.AddScope(perms.Scopes, pufferpanel.ScopeAdmin)
-		}
+		perms.Admin = answers.Admin
+		perms.ViewServer = true
 
 		err = ps.UpdatePermissions(perms)
 		if err != nil {
@@ -184,7 +195,7 @@ func validateUsername(val interface{}) error {
 func validatePassword(val interface{}) error {
 	pw, ok := val.(string)
 	if !ok || len(pw) < 6 {
-		return errors.New("password must be at least 6 characters")
+		return errors.New("Password must be at least 6 characters")
 	}
 	var secondAttempt string
 	confirm := &survey.Password{
@@ -193,7 +204,7 @@ func validatePassword(val interface{}) error {
 	_ = survey.AskOne(confirm, &secondAttempt)
 
 	if secondAttempt != pw {
-		return errors.New("password do not match")
+		return errors.New("Passwords do not match")
 	}
 
 	return nil
@@ -299,12 +310,7 @@ func editUser(cmd *cobra.Command, args []string) {
 				return
 			}
 
-			//perms.Admin = prompt
-			if prompt {
-				perms.Scopes = pufferpanel.AddScope(perms.Scopes, pufferpanel.ScopeAdmin)
-			} else {
-				perms.Scopes = pufferpanel.RemoveScope(perms.Scopes, pufferpanel.ScopeAdmin)
-			}
+			perms.Admin = prompt
 
 			err = ps.UpdatePermissions(perms)
 			if err != nil {

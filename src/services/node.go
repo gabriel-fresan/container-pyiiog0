@@ -1,3 +1,16 @@
+/*
+ Copyright 2022 Padduck, LLC
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 	http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package services
 
 import (
@@ -5,12 +18,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/models"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/config"
+	"github.com/pufferpanel/pufferpanel/v2/logging"
+	"github.com/pufferpanel/pufferpanel/v2/models"
 	"gorm.io/gorm"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -156,12 +170,6 @@ func (ns *Node) CallNode(node *models.Node, method string, path string, body io.
 		request.Body = body
 	}
 
-	ts := &PanelService{}
-	if request.Header == nil {
-		request.Header = http.Header{}
-	}
-	request.Header.Set("Authorization", "Bearer "+ts.GetActiveToken())
-
 	if node.IsLocal() {
 		w := &httptest.ResponseRecorder{}
 		w.Body = &bytes.Buffer{}
@@ -183,16 +191,15 @@ func (ns *Node) OpenSocket(node *models.Node, path string, writer http.ResponseW
 	if ssl {
 		scheme = "wss"
 	}
-	addr := fmt.Sprintf("%s:%d", node.PrivateHost, node.PrivatePort)
+	addr := net.JoinHostPort(node.PrivateHost, strconv.Itoa(int(node.PrivatePort)))
 
-	u := fmt.Sprintf("%s://%s%s", scheme, addr, path)
-	logging.Debug.Printf("Proxying connection to %s", u)
+	u := url.URL{Scheme: scheme, Host: addr, Path: path}
+	logging.Debug.Printf("Proxying connection to %s", u.String())
 
-	ts := &PanelService{}
 	header := http.Header{}
-	header.Set("Authorization", "Bearer "+ts.GetActiveToken())
+	header.Set("Authorization", request.Header.Get("Authorization"))
 
-	c, _, err := websocket.DefaultDialer.Dial(u, header)
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), header)
 	if err != nil {
 		return err
 	}
@@ -210,6 +217,7 @@ func (ns *Node) OpenSocket(node *models.Node, path string, writer http.ResponseW
 
 		ch := make(chan error)
 		go proxyRead(daemon, client, ch)
+		go proxyRead(client, daemon, ch)
 
 		err := <-ch
 
@@ -226,7 +234,7 @@ func doesDaemonUseSSL(node *models.Node) (bool, error) {
 		return false, nil
 	}
 
-	path := fmt.Sprintf("://%s:%d/daemon", node.PrivateHost, node.PrivatePort)
+	path := fmt.Sprintf("://%s/daemon", net.JoinHostPort(node.PrivateHost, strconv.Itoa(int(node.PrivatePort))))
 
 	//we want to do options so we can avoid auth
 	u, err := url.Parse("https" + path)
@@ -257,15 +265,20 @@ func createNodeURL(node *models.Node, path string) (string, error) {
 		return "", err
 	}
 
-	path = strings.TrimPrefix(path, "/")
-	path = strings.TrimSuffix(path, "/")
+	if strings.HasPrefix(path, "/") {
+		path = strings.TrimPrefix(path, "/")
+	}
+
+	if strings.HasSuffix(path, "/") {
+		path = strings.TrimSuffix(path, "/")
+	}
 
 	protocol := "http"
 	if ssl {
 		protocol = "https"
 	}
 
-	return fmt.Sprintf("%s://%s:%d/%s", protocol, node.PrivateHost, node.PrivatePort, path), nil
+	return fmt.Sprintf("%s://%s/%s", protocol, net.JoinHostPort(node.PrivateHost, strconv.Itoa(int(node.PrivatePort))), path), nil
 }
 
 func proxyRead(source, dest *websocket.Conn, ch chan error) {

@@ -2,25 +2,25 @@ package services
 
 import (
 	"github.com/mailjet/mailjet-apiv3-go/v3"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/config"
+	"github.com/pufferpanel/pufferpanel/v2/logging"
 )
 
 func SendEmailViaMailjet(to, subject, body string, async bool) error {
 	domain := config.EmailDomain.Value()
 	if domain == "" {
-		return pufferpanel.ErrSettingNotConfigured(config.EmailDomain.Key())
+		return pufferpanel.ErrSettingNotConfigured("domain")
 	}
 
 	from := config.EmailFrom.Value()
 	if from == "" {
-		return pufferpanel.ErrSettingNotConfigured(config.EmailFrom.Key())
+		return pufferpanel.ErrSettingNotConfigured("panel.email.from")
 	}
 
 	key := config.EmailKey.Value()
 	if key == "" {
-		return pufferpanel.ErrSettingNotConfigured(config.EmailKey.Key())
+		return pufferpanel.ErrSettingNotConfigured("panel.email.key")
 	}
 
 	m := mailjet.NewMailjetClient(domain, key)

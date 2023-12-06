@@ -3,21 +3,21 @@ package models
 type UserSettingView struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
-} //@name UserSettings
+}
 
 type UserSettingsView []*UserSettingView
 
 func FromUserSetting(setting *UserSetting) *UserSettingView {
 	return &UserSettingView{
-		Key:   setting.Key,
+		Key: setting.Key,
 		Value: setting.Value,
 	}
 }
 
-func FromUserSettings(settings []*UserSetting) UserSettingsView {
-	result := make(UserSettingsView, len(settings))
+func FromUserSettings(settings *UserSettings) UserSettingsView {
+	result := make(UserSettingsView, len(*settings))
 
-	for k, v := range settings {
+	for k, v := range *settings {
 		result[k] = FromUserSetting(v)
 	}
 

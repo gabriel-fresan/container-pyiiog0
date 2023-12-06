@@ -1,7 +1,9 @@
 package models
 
-type Setting struct {
+type ChangeSetting struct {
 	Value interface{} `json:"value"`
-} //@name Setting
+}
 
-type ChangeMultipleSettings map[string]interface{} //@name ChangeMultipleSettings
+type SettingResponse struct {
+	Value interface{} `json:"value"`
+}

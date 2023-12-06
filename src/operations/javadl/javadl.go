@@ -1,16 +1,29 @@
+/*
+ Copyright 2022 PufferPanel
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 	http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package javadl
 
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/config"
+	"github.com/pufferpanel/pufferpanel/v2/logging"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -111,7 +124,7 @@ func (op JavaDl) callAdoptiumApi() (File, error) {
 
 	logging.Debug.Println("Calling " + url)
 	response, err := pufferpanel.HttpGet(url)
-	defer pufferpanel.CloseResponse(response)
+	defer response.Body.Close()
 	if err != nil {
 		return File{}, err
 	}
@@ -123,11 +136,11 @@ func (op JavaDl) callAdoptiumApi() (File, error) {
 	}
 
 	if len(data) != 1 {
-		return File{}, fmt.Errorf("expected 1 match from adoptium, found %d", len(data))
+		return File{}, errors.New("expected 1 match from adoptium, found " + strconv.Itoa(len(data)))
 	}
 
 	if len(data[0].Binaries) != 1 {
-		return File{}, fmt.Errorf("expected 1 binary from adoptium, found %d", len(data[0].Binaries))
+		return File{}, errors.New("expected 1 binary from adoptium, found " + strconv.Itoa(len(data[0].Binaries)))
 	}
 	return data[0], nil
 }

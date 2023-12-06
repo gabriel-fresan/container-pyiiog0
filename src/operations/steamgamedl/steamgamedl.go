@@ -1,12 +1,22 @@
+/*
+ Copyright 2022 PufferPanel
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 	http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package steamgamedl
 
 import (
-	"bufio"
-	"fmt"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/spf13/cast"
-	"math/rand"
+	"errors"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/config"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -42,16 +52,7 @@ func (c SteamGameDl) Run(env pufferpanel.Environment) (err error) {
 		return err
 	}
 
-	//generate a login id
-	//this is a 32-bit id, which Steam derives from private IP
-	//as such, we can kinda send anything we want
-	//our approach will be we hash the server id
-	loginId := cast.ToString(rand.Int31())
-
-	manifestFolder := filepath.Join(env.GetRootDirectory(), ".manifest")
-	_ = os.RemoveAll(manifestFolder)
-
-	args := []string{"-app", c.AppId, "-dir", manifestFolder, "-loginid", loginId, "-manifest-only"}
+	var args = []string{"-app", c.AppId, "-dir", "."}
 	if c.Username != "" {
 		args = append(args, "-username", c.Username, "-remember-password")
 		if c.Password != "" {
@@ -60,11 +61,17 @@ func (c SteamGameDl) Run(env pufferpanel.Environment) (err error) {
 	}
 	args = append(args, c.ExtraArgs...)
 
-	ch := make(chan int, 1)
+	cmd, err := filepath.Abs(filepath.Join(rootBinaryFolder, "depotdownloader", DepotDownloaderBinary))
+	if err != nil {
+		return err
+	}
+
+	ch := make(chan bool, 1)
 	steps := pufferpanel.ExecutionData{
-		Command:   filepath.Join(rootBinaryFolder, "depotdownloader", DepotDownloaderBinary),
+		//Command:          fmt.Sprintf("%s%c%s", ".", filepath.Separator, "dotnet"),
+		Command:   cmd,
 		Arguments: args,
-		Callback: func(exitCode int) {
+		Callback: func(exitCode bool) {
 			ch <- exitCode
 		},
 	}
@@ -72,54 +79,14 @@ func (c SteamGameDl) Run(env pufferpanel.Environment) (err error) {
 	if err != nil {
 		return err
 	}
-	exitCode := <-ch
-	if exitCode != 0 {
-		return fmt.Errorf("depotdownloader exited with non-zero code %d", exitCode)
+	success := <-ch
+	if !success {
+		return errors.New("depotdownloader exited with non-zero code")
 	}
 
-	//download game itself now
-	args = []string{"-app", c.AppId, "-dir", env.GetRootDirectory(), "-loginid", loginId, "-validate"}
-	if c.Username != "" {
-		args = append(args, "-username", c.Username, "-remember-password")
-		if c.Password != "" {
-			args = append(args, "-password", c.Password)
-		}
-	}
-
-	if c.ExtraArgs != nil && len(c.ExtraArgs) > 0 {
-		args = append(args, c.ExtraArgs...)
-	}
-
-	steps = pufferpanel.ExecutionData{
-		Command:   filepath.Join(rootBinaryFolder, "depotdownloader", DepotDownloaderBinary),
-		Arguments: args,
-		Callback: func(exitCode int) {
-			ch <- exitCode
-		},
-	}
-	err = env.Execute(steps)
-	if err != nil {
-		return err
-	}
-	exitCode = <-ch
-	if exitCode != 0 {
-		return fmt.Errorf("depotdownloader exited with non-zero code %d", exitCode)
-	}
-
-	//for each file we download, we need to just... chmod +x the files
-	//we rely on the manifests for this
-	manifests, err := os.ReadDir(manifestFolder)
-	if err != nil {
-		return err
-	}
-	for _, manifest := range manifests {
-		if manifest.Type().IsDir() || !strings.HasSuffix(manifest.Name(), ".txt") {
-			continue
-		}
-		err = walkManifest(env.GetRootDirectory(), manifest.Name())
-		if err != nil {
-			return err
-		}
+	//for some steam games, there's a binary we can instant-mark
+	if fi, err := os.Stat(filepath.Join(env.GetRootDirectory(), "srcds_run")); err == nil && !fi.IsDir() {
+		_ = os.Chmod(filepath.Join(env.GetRootDirectory(), "srcds_run"), 0755)
 	}
 
 	return nil
@@ -137,7 +104,7 @@ func downloadBinaries(rootBinaryFolder string) error {
 	link := DepotDownloaderLink
 	arch := "x64"
 	if runtime.GOOS == "arm64" {
-		arch = "arm64"
+		arch = "amd64"
 	}
 	link = strings.Replace(link, "${arch}", arch, 1)
 
@@ -146,8 +113,8 @@ func downloadBinaries(rootBinaryFolder string) error {
 		return err
 	}
 
-	_ = os.Chmod(filepath.Join(rootBinaryFolder, "depotdownloader", DepotDownloaderBinary), 0755)
-	return nil
+	err = os.Chmod(filepath.Join(rootBinaryFolder, "depotdownloader", DepotDownloaderBinary), 0755)
+	return err
 }
 
 func downloadMetadata(env pufferpanel.Environment) error {
@@ -175,41 +142,10 @@ func downloadMetadata(env pufferpanel.Environment) error {
 	}
 
 	for source, target := range RenameFolders {
-		_ = os.Rename(filepath.Join(env.GetRootDirectory(), ".steam", source), filepath.Join(env.GetRootDirectory(), ".steam", target))
+		err = os.Rename(filepath.Join(env.GetRootDirectory(), ".steam", source), filepath.Join(env.GetRootDirectory(), ".steam", target))
+		if err != nil {
+			return err
+		}
 	}
 	return err
-}
-
-func walkManifest(folder, filename string) error {
-	file, err := os.Open(filepath.Join(folder, ".manifest", filename))
-	defer pufferpanel.Close(file)
-	if err != nil {
-		return err
-	}
-	data := bufio.NewScanner(file)
-	skipCounter := 8
-	for data.Scan() {
-		line := data.Text()
-		if skipCounter > 0 {
-			skipCounter--
-			continue
-		}
-		parts := strings.Fields(line)
-		if len(parts) < 5 || parts[0] == "Size" {
-			continue
-		}
-		if len(parts) > 5 {
-			//the filename at the end has spaces, we need to consolidate
-			parts[4] = strings.Join(parts[5:], " ")
-			parts = parts[0:5]
-		}
-
-		//we will only work on 0 files, because this mean no other flags were told
-		if parts[3] == "0" {
-			fileToUpdate := parts[4]
-			_ = os.Chmod(filepath.Join(folder, fileToUpdate), 0755)
-		}
-	}
-
-	return nil
 }

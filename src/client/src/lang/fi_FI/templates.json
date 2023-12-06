@@ -1,0 +1,119 @@
+{
+  "Templates": "Mallipohjat",
+  "NoTemplates": "Mallipohjia ei ole vielä lisätty",
+  "Deleted": "Mallipohja poistettu",
+  "New": "Luo uusi mallipohja",
+  "Edit": "Muokka mallipohjaa",
+  "Editor": "Editori",
+  "Json": "JSON",
+  "Display": "Näyttönimi",
+  "Type": "Tyyppi",
+  "Variables": "Muuttujat",
+  "Install": "Asenna",
+  "AddInstallStep": "Lisää Asennusvaihe",
+  "DeleteInstallStep": "Poista Asennusvaihe",
+  "Description": "Kuvaus",
+  "DataType": "Tietotyyppi",
+  "DefaultValue": "Oletusarvo",
+  "Required": "Pakollinen",
+  "UserEditable": "Käyttäjät voivat muokata",
+  "Value": "Arvo",
+  "AddOption": "Lisää vaihtoehto",
+  "AddCommand": "Lisää komento",
+  "Filename": "Tiedoston nimi",
+  "Content": "Sisältö",
+  "Source": "Lähde",
+  "Target": "Kohde",
+  "Version": "Versio",
+  "ReleaseType": "Julkaisun Tyyppi",
+  "AddFile": "Lisää tiedosto",
+  "AddVariable": "Lisää muuttuja",
+  "Environment": "Ympäristö",
+  "Environments": "Ympäristöt",
+  "AddEnvironment": "Lisää ympäristö",
+  "DefaultEnvironment": "Oletus ympäristö",
+  "AddEnvVar": "Lisää env muuttuja",
+  "EnvVars": "Ympäristön muuttujat",
+  "DockerImage": "Docker-kuva",
+  "SaveSuccess": "Tallennettu mallipohja",
+  "VarNameNoSpaces": "Muuttujan nimi ei voi olla tyhjä tai sisältää välilyöntejä",
+  "SupportedEnvironments": "Tuetut Ympäristöt",
+  "RunConfig": "Suorita Asetukset",
+  "PreHook": "Ajoa edeltävä koukku",
+  "PostHook": "Ajon jälkeinen koukku",
+  "AddPreStep": "Lisää ajoa edeltävä vaihe",
+  "AddPostStep": "Lisää ajon jälkeinen vaihe",
+  "DeletePreStep": "Poista ajoa edeltävä vaihe",
+  "DeletePostStep": "Poista ajon jälkeinen vaihe",
+  "Shutdown": "Sammuta",
+  "Command": "Komento",
+  "WorkingDirectory": "Työhakemisto",
+  "Arguments": "Argumentit",
+  "AddArgument": "Lisää argumentti",
+  "Convert": "Muunna",
+  "OfferV1Convert": "Tämän pohjan json näyttää olevan pohja PufferPanelin 1.x-versiolle. Haluatko automaattisesti muuntaa sen PufferPanelin 2.x-versiolle?",
+  "import": {
+    "CommunityWarning": "Nämä pohjat ovat yhteisön tekemiä ja annetaan ilman takuita",
+    "OverrideWarning": "VAROITUS: Tuodut pohjat korvaavat olemassa olevat pohjat, joilla on sama ID",
+    "Import": "Tuo mallit",
+    "Tooltip": "Tuo mallipohjat virallisesta arkistosta",
+    "Select": "Valitse tuotavat pohjat",
+    "Started": "Pohjia tuodaan, odota hetki",
+    "Successful": "Tuotu onnistuneesti pohja {template}",
+    "NoTemplatesTitle": "Haluatko tuoda pohjat?",
+    "NoTemplatesContent": "Sinulla ei ole tällä hetkellä yhtään pohjaa. Pohjia tarvitaan palvelinten luontiin.<br/>Haluatko tuoda joitakin pohjia virallisesta PufferPanelin pohjien arkistosta?"
+  },
+  "stop": {
+    "Command": "Komento",
+    "Signal": "Signaali"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "Lataa",
+      "files": "Tiedostot"
+    },
+    "command": {
+      "ProcessorName": "Suorita komento",
+      "commands": "Komennot"
+    },
+    "alterfile": {
+      "ProcessorName": "Muuta tiedostoa",
+      "regex": "Käsittele hakua RegEx-lausekkeena",
+      "search": "Haettava teksti",
+      "replace": "Korvaa"
+    },
+    "writefile": {
+      "ProcessorName": "Kirjoita tiedostoon",
+      "text": "Sisältö"
+    },
+    "move": {
+      "ProcessorName": "Siirrä tiedosto",
+      "source": "Lähde",
+      "target": "Kohde"
+    },
+    "mkdir": {
+      "ProcessorName": "Luo hakemisto"
+    },
+    "mojangdl": {
+      "ProcessorName": "Lataa Minecraft"
+    },
+    "forgedl": {
+      "ProcessorName": "Lataa Minecraft Forge"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Lataa Minecraft SpongeForge",
+      "releaseType": "Julkaisun tyyppi"
+    },
+    "fabricdl": {
+      "ProcessorName": "Lataa Minecraft Fabric"
+    },
+    "javadl": {
+      "ProcessorName": "Download Java",
+      "version": "Version of Java to install (8, 16, 17)"
+    },
+    "steamgamedl": {
+      "ProcessorName": "Download Game from Steam",
+      "appId": "App Id"
+    }
+  }
+}

@@ -2,6 +2,7 @@
 .github/**
 .azure/*
 .git/**
+*.md
 *.syso
 **/node_modules/**
 
@@ -9,5 +10,3 @@
 LICENSE
 azure-pipelines.yml
 crowdin.yml
-Dockerfile
-Dockerfile*

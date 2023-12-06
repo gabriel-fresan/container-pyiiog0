@@ -1,15 +1,28 @@
+/*
+ Copyright 2020 Padduck, LLC
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  	http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+
 package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/assets/email"
-	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/config"
+	"github.com/pufferpanel/pufferpanel/v2/logging"
 	"html/template"
-	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -36,14 +49,9 @@ type emailService struct {
 func LoadEmailService() {
 	globalEmailService = &emailService{templates: make(map[string]*emailTemplate)}
 
-	var merged fs.ReadFileFS
-	if config.EmailTemplateFolder.Value() != "" {
-		merged = pufferpanel.NewMergedFS(os.DirFS(config.EmailTemplateFolder.Value()), email.FS)
-	} else {
-		merged = email.FS
-	}
-
-	emailDefinition, err := merged.Open("emails.json")
+	jsonPath := config.EmailTemplateJson.Value()
+	parentDir := filepath.Dir(jsonPath)
+	emailDefinition, err := os.Open(jsonPath)
 	if err != nil {
 		panic(err)
 	}
@@ -58,17 +66,17 @@ func LoadEmailService() {
 	for templateName, data := range mapping {
 		subjectTemplate, err := template.New(templateName + "-subject").Parse(data.Subject)
 		if err != nil {
-			panic(fmt.Errorf("error processing email template subject %s: %s", templateName, err.Error()))
+			panic(errors.New(fmt.Sprintf("Error processing email template subject %s: %s", templateName, err.Error())))
 		}
 
-		body, err := merged.ReadFile(data.Body)
+		body, err := os.ReadFile(filepath.Join(parentDir, data.Body))
 		if err != nil {
-			panic(fmt.Errorf("error processing email template subject %s: %s", templateName, err.Error()))
+			panic(errors.New(fmt.Sprintf("Error processing email template subject %s: %s", templateName, err.Error())))
 		}
 
 		renderedTemplate, err := template.New(templateName + "-body").Parse(string(body))
 		if err != nil {
-			panic(fmt.Errorf("error processing email template body %s: %s", templateName, err.Error()))
+			panic(errors.New(fmt.Sprintf("Error processing email template body %s: %s", templateName, err.Error())))
 		}
 
 		globalEmailService.templates[templateName] = &emailTemplate{

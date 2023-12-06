@@ -1,11 +1,25 @@
+/*
+ Copyright 2020 Padduck, LLC
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  	http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+
 package database
 
 import (
+	"errors"
 	"fmt"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/models"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/config"
+	"github.com/pufferpanel/pufferpanel/v2/logging"
+	"github.com/pufferpanel/pufferpanel/v2/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -42,7 +56,7 @@ func openConnection() (err error) {
 		case "mysql":
 			connString = "pufferpanel:pufferpanel@/pufferpanel"
 		case "sqlite3":
-			connString = "file:pufferpanel.db"
+			connString = "file:pufferpanel.db?cache=shared"
 		}
 	}
 
@@ -50,12 +64,8 @@ func openConnection() (err error) {
 		connString = addConnectionSetting(connString, "charset=utf8")
 		connString = addConnectionSetting(connString, "parseTime=true")
 	} else if dialect == "sqlite3" {
-		connString = addConnectionSetting(connString, "cache=shared")
 		connString = addConnectionSetting(connString, "_loc=auto")
 		connString = addConnectionSetting(connString, "_foreign_keys=1")
-		connString = addConnectionSetting(connString, "_journal_mode=WAL")
-		connString = addConnectionSetting(connString, "_busy_timeout=5000")
-		connString = addConnectionSetting(connString, "_tx_lock=immediate")
 	}
 
 	var dialector gorm.Dialector
@@ -69,7 +79,7 @@ func openConnection() (err error) {
 	case "sqlserver":
 		dialector = sqlserver.Open(connString)
 	default:
-		return fmt.Errorf("unknown dialect %s", dialect)
+		return errors.New(fmt.Sprintf("unknown dialect %s", dialect))
 	}
 
 	gormConfig := gorm.Config{}
@@ -85,7 +95,7 @@ func openConnection() (err error) {
 		gormConfig.Logger = gormConfig.Logger.LogMode(logger.Info)
 	}
 
-	// Sqlite doesn't implement constraints see https://gorm.io/docs/migration.html#Auto-Migration
+	// Sqlite doesn't implement constraints see  https://github.com/go-gorm/gorm/wiki/GORM-V2-Release-Note-Draft#all-new-migratolease-Note-Draft#all-new-migrator
 	gormConfig.DisableForeignKeyConstraintWhenMigrating = dialect == "sqlite3"
 
 	dbConn, err = gorm.Open(dialector, &gormConfig)
@@ -98,21 +108,7 @@ func openConnection() (err error) {
 	if err := migrateModels(); err != nil {
 		return err
 	}
-
-	err = migrate(dbConn)
-	if err != nil {
-		return err
-	}
-
-	if dialect == "sqlite3" {
-		d, e := dbConn.DB()
-		if e != nil {
-			return e
-		}
-		d.SetMaxOpenConns(1)
-	}
-
-	return nil
+	return migrate(dbConn)
 }
 
 func GetConnection() (*gorm.DB, error) {
@@ -140,8 +136,6 @@ func migrateModels() error {
 		&models.Permissions{},
 		&models.Client{},
 		&models.UserSetting{},
-		&models.Session{},
-		&models.TemplateRepo{},
 	}
 
 	for _, v := range dbObjects {
@@ -149,6 +143,19 @@ func migrateModels() error {
 			return err
 		}
 	}
+
+	dialect := config.DatabaseDialect.Value()
+	if dialect == "" || dialect == "sqlite3" {
+		//SQLite does not support creating FKs like this, so we can't just enable them...
+		/*var res = dbConn.Exec("PRAGMA foreign_keys = ON")
+		if res.RowsAffected == 0 {
+			logging.Error.Println("SQLite does not support FKs")
+		} else {
+			logging.Debug.Printf("%v\n", res.Value)
+		}*/
+		return nil
+	}
+
 	return migrate(dbConn)
 }
 
@@ -157,10 +164,10 @@ func addConnectionSetting(connString, setting string) string {
 		return connString
 	}
 
-	if strings.Contains(connString, "?") {
-		connString += "&"
-	} else {
+	if !strings.Contains(connString, "?") {
 		connString += "?"
+	} else {
+		connString += "&"
 	}
 	connString += setting
 

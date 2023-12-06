@@ -1,0 +1,22 @@
+{
+  "Node": "Κόμβος",
+  "Nodes": "Κόμβοι",
+  "Edit": "Επεξεργασία Κόμβου",
+  "Add": "Προσθήκη Κόμβου",
+  "Update": "Ενημέρωση Κόμβου",
+  "Delete": "Διαγραφή Κόμβου",
+  "PublicHost": "Δημόσιος Διακομιστής",
+  "PublicPort": "Δημόσια Θύρα",
+  "PrivateHost": "Ιδιωτικός Διακομιστής",
+  "PrivatePort": "Ιδιωτική Θύρα",
+  "SftpPort": "Θύρα SFTP",
+  "WithPrivateAddress": "Χρήση διαφορετικού κεντρικού υπολογιστή/θύρας για το διακομιστή κατά την επικοινωνία με τον διακομιστή",
+  "WithPrivateAddressHint": "Αυτή η ξεχωριστή διεύθυνση χρησιμοποιείται όταν ο κύριος κόμβος πρέπει να \"μιλήσει\" στον νέο κόμβο. Χρήσιμο, για παράδειγμα, όταν οι κόμβοι βρίσκονται στο ίδιο δίκτυο πίσω από NAT.",
+  "SaveConfig": "Αποθήκευση Ρυθμίσεων",
+  "SavePublicKey": "Αποθήκευση Δημόσιου Κλειδιού",
+  "DeploymentInstruction": "Για να αναρτήσετε/χρησιμοποιήσετε τον κόμβο, εγκαταστήστε το PufferPanel στο νέο διακομιστή και τοποθετήστε το αρχείο config στον φάκελο `/etc/pufferpanel/`<br/>. Επανεκκινήστε το PufferPanel στο νέο διακομιστή αμέσως μετά.",
+  "UpdateSuccess": "Επιτυχής ενημέρωση κόμβου",
+  "UpdateError": "Σφάλμα ενημέρωσης κόμβου",
+  "LocalNodeInstructions": "The local node is not editable through this screen. To change the host or port information, please update the `Master Url` in the settings.",
+  "CannotEdit": "Cannot Edit"
+}

@@ -1,3 +1,19 @@
+/*
+ Copyright 2019 Padduck, LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ 	http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package oauth2
 
 import (
@@ -5,9 +21,9 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/config"
+	"github.com/pufferpanel/pufferpanel/v2/logging"
 	"net/http"
 	"net/url"
 	"sync"
@@ -58,10 +74,6 @@ func RefreshToken() bool {
 
 	var responseData TokenResponse
 	err = json.NewDecoder(response.Body).Decode(&responseData)
-	if err != nil {
-		logging.Error.Printf("error talking to auth server: %s", err.Error())
-		return false
-	}
 
 	if responseData.Error != "" {
 		logging.Error.Printf("error talking to auth server: %s", responseData.Error)
@@ -100,20 +112,17 @@ func createRequest(data url.Values) (request *http.Request) {
 }
 
 type TokenInfoResponse struct {
-	Active bool   `json:"active"`
-	Scope  string `json:"scope,omitempty"`
-	ErrorResponse
-} //@name OAuth2TokenInfoResponse
-
-type TokenResponse struct {
-	AccessToken string `json:"access_token,omitempty"`
-	TokenType   string `json:"token_type,omitempty"`
-	ExpiresIn   int64  `json:"expires_in,omitempty"`
-	Scope       string `json:"scope"`
-	ErrorResponse
-} //@name OAuth2TokenResponse
-
-type ErrorResponse struct {
+	Active           bool   `json:"active"`
+	Scope            string `json:"scope,omitempty"`
 	Error            string `json:"error,omitempty"`
 	ErrorDescription string `json:"error_description,omitempty"`
-} //@name OAuthErrorResponse
+}
+
+type TokenResponse struct {
+	AccessToken      string `json:"access_token,omitempty"`
+	TokenType        string `json:"token_type,omitempty"`
+	ExpiresIn        int64  `json:"expires_in,omitempty"`
+	Scope            string `json:"scope"`
+	Error            string `json:"error,omitempty"`
+	ErrorDescription string `json:"error_description,omitempty"`
+}

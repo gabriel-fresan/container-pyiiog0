@@ -3,7 +3,8 @@ package fabricdl
 import (
 	"encoding/json"
 	"errors"
-	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v2/environments"
 	"path"
 )
 
@@ -31,10 +32,10 @@ func (f *Fabricdl) Run(env pufferpanel.Environment) error {
 		return err
 	}
 	if len(metadata) == 0 {
-		return errors.New("no metadata available from Fabric, unable to download installer")
+		return errors.New("No metadata available from Fabric, unable to download installer")
 	}
 
-	file, err := pufferpanel.DownloadViaMaven(metadata[0].Url, env)
+	file, err := environments.DownloadViaMaven(metadata[0].Url, env)
 	if err != nil {
 		return err
 	}

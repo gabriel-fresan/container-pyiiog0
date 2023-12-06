@@ -1,3 +1,16 @@
+/*
+ Copyright 2018 Padduck, LLC
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 	http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package web
 
 import (
@@ -5,196 +18,81 @@ import (
 	_ "github.com/alecthomas/template"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/client/frontend/dist"
-	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
-	"github.com/pufferpanel/pufferpanel/v3/web/api"
-	"github.com/pufferpanel/pufferpanel/v3/web/auth"
-	"github.com/pufferpanel/pufferpanel/v3/web/daemon"
-	"github.com/pufferpanel/pufferpanel/v3/web/oauth2"
-	_ "github.com/pufferpanel/pufferpanel/v3/web/swagger"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/pufferpanel/pufferpanel/v2/config"
+	"github.com/pufferpanel/pufferpanel/v2/middleware"
+	"github.com/pufferpanel/pufferpanel/v2/middleware/handlers"
+	"github.com/pufferpanel/pufferpanel/v2/web/api"
+	"github.com/pufferpanel/pufferpanel/v2/web/auth"
+	"github.com/pufferpanel/pufferpanel/v2/web/daemon"
+	"github.com/pufferpanel/pufferpanel/v2/web/oauth2"
+	"github.com/pufferpanel/pufferpanel/v2/web/proxy"
+	_ "github.com/pufferpanel/pufferpanel/v2/web/swagger"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 	_ "github.com/swaggo/swag"
-	"io/fs"
 	"net/http"
-	"os"
 	"strings"
 )
 
-var noHtmlRedirectOn404 = []string{"/api/", "/oauth2/", "/daemon/"}
-var clientFiles fs.ReadFileFS
+var ClientPath string
+var IndexFile string
 
-// RegisterRoutes Registers all routes
+var noHandle404 = []string{"/api/", "/oauth2/", "/daemon/", "/proxy/"}
+
 // @title PufferPanel API
-// @version 3.0
-// @description PufferPanel API interface for both the panel and daemon.
+// @version 2.0
+// @description PufferPanel API interface for both the panel and daemon. Endpoints starting with /daemon or /proxy are for nodes.
 // @contact.name PufferPanel
 // @contact.url https://pufferpanel.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @Accept json
-// @Produce json
-// @description.markdown
-// @securitydefinitions.oauth2.application OAuth2Application
-// @tokenUrl /oauth2/token
-// @scope.none No scope needed
-// @scope.admin Administrator, full rights to all actions
-// @scope.login Allows logging into the panel
-// @scope.oauth2.auth Scope to validate another OAuth2 credential
-// @scope.nodes.view Allows viewing nodes
-// @scope.nodes.create Allows creating nodes
-// @scope.nodes.delete Allows for deleting nodes
-// @scope.nodes.edit Allows editing of node connection information
-// @scope.nodes.deploy Allows getting the config of a node for deployment
-// @scope.self.edit Allows editing of personal account
-// @scope.self.clients Allows creating OAuth2 clients under the account
-// @scope.server.admin Admin access to a server (full permissions)
-// @scope.server.view Allows viewing a server
-// @scope.server.create Allows creating servers
-// @scope.server.delete Allows deleting servers
-// @scope.server.definition.edit Allows editing a server's definition
-// @scope.server.data.edit Allows editing the values of variables
-// @scope.server.flags.edit Allows changing flags on the server
-// @scope.server.name.edit Allows editing of a server name
-// @scope.server.definition.view Allows viewing a server's definition
-// @scope.server.data.view Allows viewing a server's variables
-// @scope.server.flags.view Allows viewing a server's flags
-// @scope.server.clients.view Allows viewing OAuth2 clients associated to a server
-// @scope.server.clients.edit Allows editing OAuth2 clients associated to a server
-// @scope.server.clients.create Allows adding a new OAuth2 client to a server
-// @scope.server.clients.delete Allows deleting OAuth2 clients associated to a server
-// @scope.server.users.view Allows viewing users associated to a server
-// @scope.server.users.edit Allows editing user permissions to a server
-// @scope.server.users.create Allows adding a new user to a server
-// @scope.server.users.delete Allows removing users from to a server
-// @scope.server.tasks.view Allows viewing tasks associated to a server
-// @scope.server.tasks.edit Allows editing tasks associated to a server
-// @scope.server.tasks.add Allows adding a new tasks to a server
-// @scope.server.tasks.delete Allows deleting tasks from to a server
-// @scope.server.tasks.run Allows for running tasks on a server
-// @scope.server.reload Allows reloading of a server's definition from disk
-// @scope.server.start Allow starting a server
-// @scope.server.stop Allows stopping a server
-// @scope.server.kill Allows killing a server
-// @scope.server.install Allows using the "Install" button for a server
-// @scope.server.files.view Allows viewing and downloading files for a server through the File Manager
-// @scope.server.files.edit Allows editing files for a server through the File Manager
-// @scope.server.sftp Allows connection to a server over SFTP
-// @scope.server.console Allows viewing the console of a server
-// @scope.server.console.send Allows sending commands to a server's console
-// @scope.server.stats Allows getting stats of a server like CPU and memory usage
-// @scope.server.status Allows getting the status of a server
-// @scope.settings.edit Allows for editing of panel settings
-// @scope.templates.view Allows viewing templates
-// @scope.templates.local.edit Allows editing of templates in the local repo
-// @scope.templates.repo.create Allows adding a new template repo
-// @scope.templates.repo.delete Allows deleting of a template repo
-// @scope.users.info.search Allows for searching for users
-// @scope.users.info.view Allows for viewing a user's info
-// @scope.users.info.edit Allows for editing a user's info
-// @scope.users.perms.view Allows for viewing a user's global permissions
-// @scope.users.perms.edit Allows for editing a user's global permissions
 func RegisterRoutes(e *gin.Engine) {
 	e.Use(func(c *gin.Context) {
 		middleware.Recover(c)
 	})
 
-	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(0), ginSwagger.DeepLinking(false)))
+	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if config.DaemonEnabled.Value() {
-		daemon.RegisterDaemonRoutes(e.Group("/daemon"))
+		daemon.RegisterDaemonRoutes(e.Group("/daemon", handlers.HasOAuth2Token))
 	}
 
 	if config.PanelEnabled.Value() {
+		ClientPath = config.WebRoot.Value()
+		IndexFile = ClientPath + "/index.html"
+
 		api.RegisterRoutes(e.Group("/api"))
 		e.GET("/manifest.json", webManifest)
 		oauth2.RegisterRoutes(e.Group("/oauth2"))
 		auth.RegisterRoutes(e.Group("/auth"))
 
-		clientFiles = dist.ClientFiles
-		if config.WebRoot.Value() != "" {
-			clientFiles = pufferpanel.NewMergedFS(os.DirFS(config.WebRoot.Value()), clientFiles)
-		}
+		proxy.RegisterRoutes(e.Group("/proxy"))
 
-		css := e.Group("/css")
-		{
-			css.Use(gzip.Gzip(gzip.DefaultCompression))
-			css.Use(setContentType("text/css"))
-			f, err := fs.Sub(clientFiles, "css")
-			if err != nil {
-				panic(err)
-			}
-			css.StaticFS("", http.FS(f))
-		}
-		fonts := e.Group("/fonts")
-		{
-			fonts.Use(gzip.Gzip(gzip.DefaultCompression))
-			f, err := fs.Sub(clientFiles, "fonts")
-			if err != nil {
-				panic(err)
-			}
-			fonts.StaticFS("", http.FS(f))
-		}
-		img := e.Group("/img")
-		{
-			f, err := fs.Sub(clientFiles, "img")
-			if err != nil {
-				panic(err)
-			}
-			img.StaticFS("", http.FS(f))
-		}
-		js := e.Group("/js")
-		{
-			js.Use(gzip.Gzip(gzip.DefaultCompression))
-			js.Use(setContentType("application/javascript"))
-			f, err := fs.Sub(clientFiles, "js")
-			if err != nil {
-				panic(err)
-			}
-			js.StaticFS("", http.FS(f))
-		}
-		wasm := e.Group("/wasm")
-		{
-			wasm.Use(gzip.Gzip(gzip.DefaultCompression))
-			wasm.Use(setContentType("application/wasm"))
-			f, err := fs.Sub(clientFiles, "wasm")
-			if err != nil {
-				panic(err)
-			}
-			wasm.StaticFS("", http.FS(f))
-		}
-		theme := e.Group("/theme")
-		{
-			theme.Use(setContentType("application/x-tar"))
-			f, err := fs.Sub(clientFiles, "theme")
-			if err != nil {
-				panic(err)
-			}
-			theme.StaticFS("", http.FS(f))
-		}
-		e.StaticFileFS("/favicon.png", "favicon.png", http.FS(clientFiles))
-		e.StaticFileFS("/favicon.ico", "favicon.ico", http.FS(clientFiles))
+		e.Group("/ace", gzip.Gzip(gzip.DefaultCompression), setContentType("application/javascript")).StaticFS("", http.Dir(ClientPath+"/ace"))
+		e.Group("/css", gzip.Gzip(gzip.DefaultCompression)).StaticFS("", http.Dir(ClientPath+"/css"))
+		e.Group("/fonts", gzip.Gzip(gzip.DefaultCompression)).StaticFS("", http.Dir(ClientPath+"/fonts"))
+		e.Group("/img").StaticFS("", http.Dir(ClientPath+"/img"))
+		e.Group("/js", gzip.Gzip(gzip.DefaultCompression), setContentType("application/javascript")).StaticFS("", http.Dir(ClientPath+"/js"))
+		e.Group("/theme", setContentType("application/x-tar")).StaticFS("", http.Dir(ClientPath+"/theme"))
+
+		e.StaticFile("/favicon.png", ClientPath+"/favicon.png")
+		e.StaticFile("/favicon.ico", ClientPath+"/favicon.ico")
+		e.StaticFile("/apple-touch-icon.png", ClientPath+"/apple-touch-icon.png")
+		e.StaticFile("/service-worker.js", ClientPath+"/service-worker.js")
+		e.StaticFile("/service-worker-dev.js", ClientPath+"/service-worker-dev.js")
 		e.NoRoute(handle404)
 	}
 }
 
 func handle404(c *gin.Context) {
-	for _, v := range noHtmlRedirectOn404 {
+	for _, v := range noHandle404 {
 		if strings.HasPrefix(c.Request.URL.Path, v) {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
 		}
 	}
 
-	file, err := clientFiles.ReadFile("index.html")
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-	c.Data(http.StatusOK, binding.MIMEHTML, file)
+	c.File(IndexFile)
 }
 
 func webManifest(c *gin.Context) {
@@ -215,7 +113,7 @@ func webManifest(c *gin.Context) {
 		"background_color": "#fff",
 		"display":          "standalone",
 		"scope":            "/",
-		"start_url":        "/servers",
+		"start_url":        "/server",
 		"icons":            icons,
 	})
 }
@@ -223,5 +121,6 @@ func webManifest(c *gin.Context) {
 func setContentType(contentType string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Content-Type", contentType)
+		c.Next()
 	}
 }

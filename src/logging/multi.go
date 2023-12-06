@@ -9,10 +9,7 @@
 
 package logging
 
-import (
-	"io"
-	"reflect"
-)
+import "io"
 
 type multiWriter struct {
 	writers []io.Writer
@@ -20,9 +17,6 @@ type multiWriter struct {
 
 func (t *multiWriter) Write(p []byte) (n int, err error) {
 	for _, w := range t.writers {
-		if w == nil {
-			continue
-		}
 		n, err = w.Write(p)
 		if err != nil {
 			return
@@ -66,9 +60,9 @@ func (t *multiWriter) WriteString(s string) (n int, err error) {
 // If a listed writer returns an error, that overall write operation
 // stops and returns the error; it does not continue down the list.
 func MultiWriter(writers ...io.Writer) io.Writer {
-	allWriters := make([]io.Writer, len(writers))
+	allWriters := make([]io.Writer, 0)
 	for _, w := range writers {
-		if isNull(w) {
+		if w == nil {
 			continue
 		}
 		if mw, ok := w.(*multiWriter); ok {
@@ -78,20 +72,4 @@ func MultiWriter(writers ...io.Writer) io.Writer {
 		}
 	}
 	return &multiWriter{allWriters}
-}
-
-func isNull(val any) bool {
-	if val == nil {
-		return true
-	}
-
-	v := reflect.ValueOf(val)
-	k := v.Kind()
-	switch k {
-	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer,
-		reflect.UnsafePointer, reflect.Interface, reflect.Slice:
-		return v.IsNil()
-	}
-
-	return false
 }

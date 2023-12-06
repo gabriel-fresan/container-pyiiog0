@@ -1,0 +1,119 @@
+{
+  "Templates": "テンプレート一覧",
+  "NoTemplates": "テンプレートがありません．",
+  "Deleted": "テンプレートを削除しました",
+  "New": "新規テンプレート",
+  "Edit": "テンプレートを編集",
+  "Editor": "編集者",
+  "Json": "JSON",
+  "Display": "表示名",
+  "Type": "種類",
+  "Variables": "変数",
+  "Install": "インストール",
+  "AddInstallStep": "インストール手順を追加",
+  "DeleteInstallStep": "インストールステップを削除",
+  "Description": "説明",
+  "DataType": "データ型",
+  "DefaultValue": "初期値",
+  "Required": "入力必要項目",
+  "UserEditable": "ユーザーが編集できる",
+  "Value": "値",
+  "AddOption": "オプションを追加",
+  "AddCommand": "コマンドを追加",
+  "Filename": "ファイル名",
+  "Content": "内容",
+  "Source": "ソース",
+  "Target": "ターゲット",
+  "Version": "バージョン",
+  "ReleaseType": "リリースの種類",
+  "AddFile": "ファイルを追加",
+  "AddVariable": "変数を追加",
+  "Environment": "環境",
+  "Environments": "環境",
+  "AddEnvironment": "使用環境の追加",
+  "DefaultEnvironment": "デフォルト環境",
+  "AddEnvVar": "新規変数を追加",
+  "EnvVars": "環境変数",
+  "DockerImage": "Docker イメージ",
+  "SaveSuccess": "保存されたテンプレート",
+  "VarNameNoSpaces": "変数名に空白またはスペースを含めることはできません",
+  "SupportedEnvironments": "サポートされている環境",
+  "RunConfig": "設定を実行",
+  "PreHook": "Pre Run Hook",
+  "PostHook": "Post Run Hook",
+  "AddPreStep": "事前実行ステップを追加",
+  "AddPostStep": "ポストランステップを追加",
+  "DeletePreStep": "前の実行ステップを削除",
+  "DeletePostStep": "ポストランステップを削除",
+  "Shutdown": "シャットダウン",
+  "Command": "コマンド",
+  "WorkingDirectory": "作業ディレクトリ",
+  "Arguments": "引数",
+  "AddArgument": "引数を追加",
+  "Convert": "変換",
+  "OfferV1Convert": "このテンプレートjsonはPufferPanel 1.x用のテンプレートのようですが、これをPufferPanel 2.x用のテンプレートに自動変換しますか？",
+  "import": {
+    "CommunityWarning": "これらのテンプレートはコミュニティによって作られ、いかなる保証もなく提供されます",
+    "OverrideWarning": "警告: インポートされたテンプレートは、同じIDの既存のテンプレートに上書きされます",
+    "Import": "テンプレートをインポートします",
+    "Tooltip": "公式リポジトリからテンプレートをインポートします",
+    "Select": "インポートするテンプレートを選択してください",
+    "Started": "テンプレートをインポートしています。しばらくお待ちください。",
+    "Successful": "テンプレート {template} を正常にインポートしました",
+    "NoTemplatesTitle": "テンプレートをインポートしますか？",
+    "NoTemplatesContent": "現在テンプレートがありません。テンプレートはサーバーを作成するために必要です。<br/>PufferPanel公式テンプレートリポジトリからテンプレートをインポートしますか？"
+  },
+  "stop": {
+    "Command": "コマンド",
+    "Signal": "シグナル"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "ダウンロード",
+      "files": "ファイル"
+    },
+    "command": {
+      "ProcessorName": "コマンドを実行",
+      "commands": "コマンド"
+    },
+    "alterfile": {
+      "ProcessorName": "ファイルを変更",
+      "regex": "検索を正規表現として処理",
+      "search": "検索するテキスト",
+      "replace": "置換テキスト"
+    },
+    "writefile": {
+      "ProcessorName": "ファイルに書き込み",
+      "text": "内容"
+    },
+    "move": {
+      "ProcessorName": "ファイルを移動",
+      "source": "ソース",
+      "target": "ターゲット"
+    },
+    "mkdir": {
+      "ProcessorName": "ディレクトリを作成"
+    },
+    "mojangdl": {
+      "ProcessorName": "Minecraftをダウンロード"
+    },
+    "forgedl": {
+      "ProcessorName": "Minecraft Forgeをダウンロード"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Minecraft SpongeForgeをダウンロード",
+      "releaseType": "リリースの種類"
+    },
+    "fabricdl": {
+      "ProcessorName": "Minecraft Fabricをダウンロード"
+    },
+    "javadl": {
+      "ProcessorName": "Download Java",
+      "version": "Version of Java to install (8, 16, 17)"
+    },
+    "steamgamedl": {
+      "ProcessorName": "Download Game from Steam",
+      "appId": "App Id"
+    }
+  }
+}

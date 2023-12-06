@@ -1,0 +1,22 @@
+{
+  "Node": "Solmu",
+  "Nodes": "Solmut",
+  "Edit": "Muokkaa solmua",
+  "Add": "Lisää solmu",
+  "Update": "Päivitä solmu",
+  "Delete": "Poista solmu",
+  "PublicHost": "Julkinen osoite",
+  "PublicPort": "Julkinen portti",
+  "PrivateHost": "Yksityinen osoite",
+  "PrivatePort": "Yksityinen portti",
+  "SftpPort": "SFTP-portti",
+  "WithPrivateAddress": "Käytä toista osoitetta/porttia palvelinten väliseen viestintään",
+  "WithPrivateAddressHint": "Tätä erillistä osoitetta käytetään, kun pääsolmun tarvitsee keskustella uuden solmun kanssa. Hyödyllistä esimerkiksi, kun solmut ovat samassa verkostossa NAT:n takana.",
+  "SaveConfig": "Tallenna asetus",
+  "SavePublicKey": "Tallenna Julkinen Avain",
+  "DeploymentInstruction": "Jos haluat ottaa solmun käyttöön, asenna PufferPanel uudelle palvelimelle ja lisää asetustiedosto `/etc/pufferpanel/`<br/>Käynnistä PufferPanel uudelleen uudella palvelimella tämän jälkeen.",
+  "UpdateSuccess": "Solmu päivitetty onnistuneesti",
+  "UpdateError": "Virhe päivitettäessä solmua",
+  "LocalNodeInstructions": "The local node is not editable through this screen. To change the host or port information, please update the `Master Url` in the settings.",
+  "CannotEdit": "Cannot Edit"
+}

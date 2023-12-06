@@ -1,0 +1,15 @@
+{
+  "Credentials": "Údaje OAuth2 klienta",
+  "ClientId": "ID klienta",
+  "ClientSecret": "Tajomstvo klienta",
+  "NewClientWarning": "Zapíšte si tajomstvo klienta, po zatvorení tohto dialógového okna sa toto dialógové okno už nikdy nezobrazí. Ak ho stratíte alebo zabudnete, tento klient bude úplne nepoužiteľný.",
+  "Create": "Vytvoriť nový OAuth2 klient",
+  "UnnamedClient": "Nepomenovaný OAuth2 klient",
+  "Docs": "Dokumentáciu API nájdete tu",
+  "DeleteWarning": "Odstránenie klienta OAuth2 nie je možné vrátiť späť, ani nie je možné vytvoriť nového klienta s rovnakými povereniami. Všetky integrácie, ktoré stále používajú tohto klienta, sa po jeho odstránení prerušia.",
+  "ConfirmDelete": "Som si vedomý účinkov, ktoré bude mať odstránenie klienta OAuth2, a chcem pokračovať.",
+  "Delete": "Vymazať {clientName}?",
+  "Clients": "OAuth2 klienti",
+  "AccountDescription": "Tu uvedení klienti OAuth2 zdieľajú všetky oprávnenia vašich účtov",
+  "ServerDescription": "Tu uvedení klienti OAuth2 zdieľajú len oprávnenia vašich účtov na tomto serveri"
+}

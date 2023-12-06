@@ -1,0 +1,22 @@
+{
+  "Node": "Node",
+  "Nodes": "Nodes",
+  "Edit": "Editare modul",
+  "Add": "Adaugă modul",
+  "Update": "Actualizare modul",
+  "Delete": "Șterge modul",
+  "PublicHost": "Host Public",
+  "PublicPort": "Port Public",
+  "PrivateHost": "Host Privat",
+  "PrivatePort": "Port privat",
+  "SftpPort": "Port SFTP",
+  "WithPrivateAddress": "Folosește un ip/port diferit pentru comunicarea dintre servere",
+  "WithPrivateAddressHint": "Acestă adresă separată este folosită atunci când node-ul principal comunică cu node-ul nou. Folositor, de exemplu, pentru node-uri care se află în aceeași rețea în spatele unui NAT.",
+  "SaveConfig": "Salvează configurația",
+  "SavePublicKey": "Salvează cheia publică",
+  "DeploymentInstruction": "Pentru a implementa acest modul, instalati PufferPanel pe noul server si plasati fisierul de configurare in `/etc/pufferpanel/`<br/>Reporniţi PufferPanel pe noul server dupa.",
+  "UpdateSuccess": "Actualizare reusita",
+  "UpdateError": "Eroare la actualizarea nodeului",
+  "LocalNodeInstructions": "The local node is not editable through this screen. To change the host or port information, please update the `Master Url` in the settings.",
+  "CannotEdit": "Cannot Edit"
+}

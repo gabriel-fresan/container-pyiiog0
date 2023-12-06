@@ -1,0 +1,22 @@
+{
+  "Node": "Node",
+  "Nodes": "Nodes",
+  "Edit": "Editar node",
+  "Add": "Adicionar node",
+  "Update": "Atualizar node",
+  "Delete": "Remover node",
+  "PublicHost": "Host público",
+  "PublicPort": "Porta pública",
+  "PrivateHost": "Host privada",
+  "PrivatePort": "Porta privada",
+  "SftpPort": "Porta SFTP",
+  "WithPrivateAddress": "Use um host/porta diferente para comunicação de servidor para servidor",
+  "WithPrivateAddressHint": "Este endereço separado é usado quando o nó principal precisa se comunicar com o novo nó. Útil, por exemplo, quando os nós estão na mesma rede atrás do NAT.",
+  "SaveConfig": "Salvar configuração",
+  "SavePublicKey": "Salvar chave pública",
+  "DeploymentInstruction": "Para instalar o node, instale o PufferPanel no novo servidor e coloque o arquivo de configuração em `/etc/pufferpanel/`<br/>Reinicie o PufferPanel no novo servidor.",
+  "UpdateSuccess": "Node atualizado com sucesso",
+  "UpdateError": "Erro ao atualizar o node",
+  "LocalNodeInstructions": "The local node is not editable through this screen. To change the host or port information, please update the `Master Url` in the settings.",
+  "CannotEdit": "Cannot Edit"
+}

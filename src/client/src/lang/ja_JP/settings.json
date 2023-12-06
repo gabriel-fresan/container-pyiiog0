@@ -1,0 +1,27 @@
+{
+  "Settings": "設定",
+  "PanelSettings": "パネル設定",
+  "EmailSettings": "メール設定",
+  "MasterUrl": "マスターURL",
+  "MasterUrlHint": "パネルのベースURLは、http://localhost:8080 の形式でアクセスすることができます",
+  "CompanyName": "会社名",
+  "DefaultTheme": "デフォルトテーマ",
+  "RegistrationEnabled": "ユーザーが自分自身を登録できるようにする",
+  "RegistrationEnabledHint1": "自己登録ユーザーは、権限が与えられるまで何もできません",
+  "RegistrationEnabledHint2": "これを無効にすると直接登録ができなくなりますが、サーバーへの招待やユーザーページは影響を受けません",
+  "EmailProvider": "メールプロバイダー",
+  "emailProviders": {
+    "none": "なし",
+    "smtp": "SMTP",
+    "mailgun": "Mailgun",
+    "mailjet": "Mailjet"
+  },
+  "emailFields": {
+    "from": "送信者メールアドレス",
+    "domain": "ドメイン",
+    "key": "API キー",
+    "host": "ホスト名",
+    "username": "ユーザー名",
+    "password": "パスワード"
+  }
+}
