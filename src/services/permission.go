@@ -1,20 +1,8 @@
-/*
- Copyright 2020 Padduck, LLC
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  	http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
-
 package services
 
 import (
-	"github.com/pufferpanel/pufferpanel/v2/models"
+	"errors"
+	"github.com/pufferpanel/pufferpanel/v3/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -24,28 +12,31 @@ type Permission struct {
 }
 
 func (ps *Permission) GetForUser(id uint) ([]*models.Permissions, error) {
-	allPerms := &models.MultiplePermissions{}
+	var allPerms []*models.Permissions
 	permissions := &models.Permissions{
 		UserId: &id,
 	}
 
 	err := ps.DB.Preload(clause.Associations).Where(permissions).Find(&allPerms).Error
 
-	return *allPerms, err
+	return allPerms, err
 }
 
 func (ps *Permission) GetForServer(serverId string) ([]*models.Permissions, error) {
-	allPerms := &models.MultiplePermissions{}
+	var allPerms []*models.Permissions
 	permissions := &models.Permissions{
 		ServerIdentifier: &serverId,
 	}
 
 	err := ps.DB.Preload(clause.Associations).Where(permissions).Find(&allPerms).Error
 
-	return *allPerms, err
+	return allPerms, err
 }
 
 func (ps *Permission) GetForUserAndServer(userId uint, serverId *string) (*models.Permissions, error) {
+	if serverId != nil && *serverId == "" {
+		serverId = nil
+	}
 	permissions := &models.Permissions{
 		UserId:           &userId,
 		ServerIdentifier: serverId,
@@ -53,7 +44,7 @@ func (ps *Permission) GetForUserAndServer(userId uint, serverId *string) (*model
 
 	err := ps.DB.Preload(clause.Associations).Where(permissions).First(permissions).Error
 
-	if err != nil && err == gorm.ErrRecordNotFound {
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return permissions, nil
 	}
 
@@ -61,15 +52,14 @@ func (ps *Permission) GetForUserAndServer(userId uint, serverId *string) (*model
 }
 
 func (ps *Permission) GetForClient(id uint) ([]*models.Permissions, error) {
-	allPerms := &models.MultiplePermissions{}
-
+	var allPerms []*models.Permissions
 	permissions := &models.Permissions{
 		ClientId: &id,
 	}
 
 	err := ps.DB.Preload(clause.Associations).Where(permissions).Find(&allPerms).Error
 
-	return *allPerms, err
+	return allPerms, err
 }
 
 func (ps *Permission) GetForClientAndServer(id uint, serverId *string) (*models.Permissions, error) {
@@ -92,11 +82,11 @@ func (ps *Permission) UpdatePermissions(perms *models.Permissions) error {
 		return ps.DB.Save(perms).Error
 	}*/
 
-	return ps.DB.Save(perms).Error
+	return ps.DB.Omit(clause.Associations).Save(perms).Error
 }
 
 func (ps *Permission) Remove(perms *models.Permissions) error {
 	//update oauth2 with new information
 
-	return ps.DB.Delete(perms).Error
+	return ps.DB.Omit(clause.Associations).Delete(perms).Error
 }

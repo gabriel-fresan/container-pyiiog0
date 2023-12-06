@@ -1,0 +1,20 @@
+{
+  "Node": "Node",
+  "Nodes": "Các Node",
+  "Edit": "Sửa Node",
+  "Add": "Thêm Node",
+  "Update": "Cập nhật Node",
+  "Delete": "Xóa Node",
+  "PublicHost": "Địa chỉ công cộng",
+  "PublicPort": "Cổng công cộng",
+  "PrivateHost": "Địa chỉ cục bộ",
+  "PrivatePort": "Cổng cục bộ",
+  "SftpPort": "Cổng SFTP",
+  "WithPrivateAddress": "Sử dụng địa chỉ/cổng khác để kết nối giữa các máy chủ",
+  "WithPrivateAddressHint": "Địa chỉ riệng này được sử dụng khi Node chính cần giao tiếp với Node mới. Hữu dụng khi các Node chung kết nối mạng sau NAT.",
+  "SaveConfig": "Lưu cấu hình",
+  "SavePublicKey": "Lưu Khoá công cộng",
+  "DeploymentInstruction": "Để triển khai Node, hãy cài đặt PufferPanel ở máy chủ mới và đặt file cấu hình tại `/etc/pufferpanel/`<br/>Sau đó khởi động lại PufferPanel ở máy chủ mới.",
+  "UpdateSuccess": "Cập nhật Node thành công",
+  "UpdateError": "Có lỗi khi cập nhật Node"
+}

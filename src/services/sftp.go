@@ -1,22 +1,9 @@
-/*
- Copyright 2020 Padduck, LLC
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  	http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
-
 package services
 
 import (
 	"errors"
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/database"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/database"
 	"golang.org/x/crypto/ssh"
 	"strings"
 )
@@ -50,20 +37,7 @@ func (s *DatabaseSFTPAuthorization) Validate(username, password string) (perms *
 		return nil, errors.New("incorrect username or password")
 	}
 
-	userPerms, err := ss.GetForUser(user.ID)
-	if err != nil {
-		return nil, errors.New("incorrect username or password")
-	}
-
-	isAdmin := false
-	for _, p := range userPerms {
-		if p.Admin {
-			isAdmin = true
-			break
-		}
-	}
-
-	if !serverPerms.SFTPServer && !isAdmin {
+	if pufferpanel.ContainsScope(serverPerms.Scopes, pufferpanel.ScopeServerSftp) {
 		return nil, errors.New("incorrect username or password")
 	}
 

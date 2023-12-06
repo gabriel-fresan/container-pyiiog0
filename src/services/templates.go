@@ -1,30 +1,16 @@
-/*
- Copyright 2019 Padduck, LLC
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  	http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
-
 package services
 
 import (
 	"encoding/json"
-	"github.com/go-git/go-billy/v5"
-	"github.com/go-git/go-billy/v5/memfs"
+	"errors"
+	"fmt"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport/client"
-	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/go-git/go-git/v5/storage/memory"
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/models"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/config"
+	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v3/models"
 	"gorm.io/gorm"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,123 +18,198 @@ import (
 	"time"
 )
 
-var ignoredPaths = []string{".git", ".github"}
-
-var templateRepo *git.Repository
-var templateFiles billy.Filesystem
-var templateRepoExpiredAt time.Time
-var templateCacheLocker sync.Mutex
+var existingPaths = make(map[uint]repoCache)
+var pathLock sync.Mutex
 
 type Template struct {
 	DB *gorm.DB
 }
 
-type templateFile struct {
-	Name       string
-	Path       string
-	ReadmePath string
+type repoCache struct {
+	LastRefreshed time.Time
+	Path          string
 }
 
-func (t *Template) GetAll() (*models.Templates, error) {
-	templates := &models.Templates{}
-	err := t.DB.Find(&templates).Error
-	if err != nil {
-		return nil, err
-	}
-	//because we don't want to return a ton of data, we'll only return a few select fields
-	replacement := make(models.Templates, len(*templates))
+var localRepo = &models.TemplateRepo{
+	ID:      0,
+	Name:    "Local",
+	IsLocal: true,
+}
 
-	for k, v := range *templates {
-		replacement[k] = &models.Template{
-			Name: v.Name,
-			Server: pufferpanel.Server{
-				Display:               v.Server.Display,
-				Type:                  v.Server.Type,
-				SupportedEnvironments: v.Server.SupportedEnvironments,
-			},
+func (*Template) GetLocalRepoId() uint {
+	return localRepo.ID
+}
+
+func (t *Template) GetRepos() ([]*models.TemplateRepo, error) {
+	var repos []*models.TemplateRepo
+	err := t.DB.Find(&repos).Error
+
+	//return list from the db, and add local
+	return append(repos, localRepo), err
+}
+
+func (t *Template) GetAllFromRepo(repoId uint) ([]*models.Template, error) {
+	var templates []*models.Template
+	var err error
+
+	if repoId == localRepo.ID {
+		err = t.DB.Find(&templates).Error
+		if err != nil {
+			return nil, err
+		}
+
+		//because we don't want to return a ton of data, we'll only return a few select fields
+		replacement := make([]*models.Template, len(templates))
+
+		for k, v := range templates {
+			replacement[k] = &models.Template{
+				Name: v.Name,
+				Server: pufferpanel.Server{
+					Display:      v.Server.Display,
+					Type:         v.Server.Type,
+					Environment:  v.Server.Environment,
+					Requirements: v.Server.Requirements,
+				},
+			}
+		}
+
+		templates = replacement
+	} else {
+		repoDb := &models.TemplateRepo{
+			ID: repoId,
+		}
+
+		err = t.DB.First(repoDb).Error
+		if err != nil {
+			return nil, err
+		}
+
+		path, err := validateRepoOnDisk(repoDb)
+		if err != nil {
+			return nil, err
+		}
+
+		folders, err := os.ReadDir(path)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, folder := range folders {
+			if !folder.IsDir() || strings.HasPrefix(folder.Name(), ".") {
+				continue
+			}
+
+			jsonFolder, err := os.ReadDir(filepath.Join(path, folder.Name()))
+			if err != nil {
+				return nil, err
+			}
+
+			for _, v := range jsonFolder {
+				if !strings.HasSuffix(v.Name(), ".json") {
+					continue
+				}
+
+				if v.Name() == "data.json" {
+					continue
+				}
+
+				name := strings.TrimSuffix(v.Name(), ".json")
+				templatePath := filepath.Join(path, folder.Name(), v.Name())
+				template, err := readTemplateFromDisk(name, templatePath)
+				if err != nil {
+					logging.Error.Printf("Error reading template from %s: %s", templatePath, err.Error())
+					continue
+				}
+
+				templates = append(templates, &models.Template{
+					Name: name,
+					Server: pufferpanel.Server{
+						Display:      template.Server.Display,
+						Type:         template.Server.Type,
+						Environment:  template.Server.Environment,
+						Requirements: template.Server.Requirements,
+					},
+				})
+			}
 		}
 	}
-	return &replacement, err
+
+	return templates, err
 }
 
-func (t *Template) Get(name string) (*models.Template, error) {
+func (t *Template) Get(repoId uint, name string) (*models.Template, error) {
 	template := &models.Template{
 		Name: name,
 	}
-	err := t.DB.Find(&template).Error
-	if err != nil {
-		return nil, err
+	if repoId == localRepo.ID {
+		err := t.DB.First(template).Error
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		repoDb := &models.TemplateRepo{
+			ID: repoId,
+		}
+
+		err := t.DB.First(repoDb).Error
+		if err != nil {
+			return nil, err
+		}
+
+		path, err := validateRepoOnDisk(repoDb)
+		if err != nil {
+			return nil, err
+		}
+
+		var folderName string
+		var exists bool
+		folders, err := os.ReadDir(path)
+		if err != nil {
+			return nil, err
+		}
+		for _, folder := range folders {
+			if !folder.IsDir() || strings.HasPrefix(folder.Name(), ".") {
+				continue
+			}
+
+			jsonFolder, err := os.ReadDir(filepath.Join(path, folder.Name()))
+			if err != nil {
+				return nil, err
+			}
+
+			for _, v := range jsonFolder {
+				if v.Name() == name+".json" {
+					folderName = folder.Name()
+					exists = true
+					break
+				}
+			}
+		}
+
+		if !exists {
+			return nil, pufferpanel.ErrNoTemplate(name)
+		}
+
+		templatePath := filepath.Join(path, folderName, name+".json")
+		template, err = readTemplateFromDisk(name, templatePath)
+		if err != nil {
+			return nil, err
+		}
+
+		readmePath := filepath.Join(path, folderName, "README.md")
+		readme, err := os.ReadFile(readmePath)
+		if err != nil {
+			logging.Error.Printf("Error reading readme %s: %s", readmePath, err.Error())
+		} else {
+			template.Readme = string(readme)
+		}
 	}
-	return template, err
+
+	return template, nil
 }
 
 func (t *Template) Save(template *models.Template) error {
 	return t.DB.Save(template).Error
-}
-
-func (t *Template) ImportFromRepo(templateName string) error {
-	files, err := t.getTemplateFiles()
-	if err != nil {
-		return err
-	}
-
-	templateCacheLocker.Lock()
-	defer templateCacheLocker.Unlock()
-
-	var template io.ReadCloser
-	var readme io.ReadCloser
-
-	defer pufferpanel.Close(template)
-	defer pufferpanel.Close(readme)
-
-	for _, file := range files {
-		if file.Name == templateName {
-			template, err = templateFiles.Open(file.Path)
-			if err != nil {
-				return err
-			}
-			if file.ReadmePath != "" {
-				readme, err = templateFiles.Open(file.ReadmePath)
-				if err != nil {
-					return err
-				}
-			}
-			break
-		}
-	}
-
-	if template == nil {
-		return pufferpanel.ErrNoTemplate(templateName)
-	}
-
-	return t.ImportTemplate(templateName, template, readme)
-}
-
-func (t *Template) ImportTemplate(name string, template, readme io.Reader) error {
-	var templateData pufferpanel.Server
-	err := json.NewDecoder(template).Decode(&templateData)
-	if err != nil {
-		return err
-	}
-
-	if len(templateData.SupportedEnvironments) == 0 {
-		templateData.SupportedEnvironments = []interface{}{templateData.Environment}
-	}
-
-	model := &models.Template{
-		Server: templateData,
-		Name:   strings.ToLower(name),
-	}
-
-	if readme != nil {
-		data, err := io.ReadAll(readme)
-		if err != nil {
-			return err
-		}
-		model.Readme = string(data)
-	}
-
-	return t.Save(model)
 }
 
 func (t *Template) Delete(name string) error {
@@ -166,104 +227,105 @@ func (t *Template) Delete(name string) error {
 	return nil
 }
 
-func (t *Template) GetImportableTemplates() ([]string, error) {
-	files, err := t.getTemplateFiles()
+func (t *Template) AddRepo(repo *models.TemplateRepo) error {
+	existing, err := t.GetRepos()
+	if err != nil {
+		return err
+	}
+	for _, v := range existing {
+		if v.Name == repo.Name {
+			return pufferpanel.ErrRepoExists
+		}
+	}
+	return t.DB.Save(repo).Error
+}
+
+func (t *Template) DeleteRepo(id uint) error {
+	return t.DB.Where(&models.TemplateRepo{ID: id}).Error
+}
+
+func readTemplateFromDisk(name, path string) (*models.Template, error) {
+	file, err := os.Open(path)
+
 	if err != nil {
 		return nil, err
 	}
 
-	results := make([]string, 0)
-	for _, f := range files {
-		results = append(results, f.Name)
-	}
+	defer pufferpanel.Close(file)
 
-	return results, nil
+	template := &models.Template{
+		Name: name,
+	}
+	err = json.NewDecoder(file).Decode(template)
+	return template, err
 }
 
-func (t *Template) refreshGithub() (err error) {
-	templateCacheLocker.Lock()
-	defer templateCacheLocker.Unlock()
+func validateRepoOnDisk(repo *models.TemplateRepo) (string, error) {
+	//temp locations!!!
+	pathLock.Lock()
+	defer pathLock.Unlock()
 
-	if templateRepo == nil {
-		client.InstallProtocol("https", githttp.NewClient(pufferpanel.Http()))
+	if cache, exists := existingPaths[repo.ID]; exists {
+		if cache.LastRefreshed.Add(time.Minute * 5).After(time.Now()) {
+			return cache.Path, nil
+		}
 
-		templateFiles = memfs.New()
-		templateRepo, err = git.Clone(memory.NewStorage(), templateFiles, &git.CloneOptions{
-			URL:           "https://github.com/PufferPanel/templates",
-			ReferenceName: "refs/heads/v2.6",
+		logging.Debug.Printf("Updating local git repo for %s: %s", repo.Name, cache)
+
+		r, err := git.PlainOpen(cache.Path)
+		if err != nil {
+			return "", err
+		}
+
+		w, err := r.Worktree()
+		if err != nil {
+			return "", err
+		}
+
+		err = w.Pull(&git.PullOptions{
+			SingleBranch:  true,
+			ReferenceName: plumbing.ReferenceName("refs/heads/" + repo.Branch),
+			RemoteName:    "origin"},
+		)
+		if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+			return "", err
+		}
+
+		existingPaths[repo.ID] = repoCache{
+			LastRefreshed: time.Now(),
+			Path:          cache.Path,
+		}
+	} else {
+		path := filepath.Join(config.CacheFolder.Value(), "template-repos", fmt.Sprintf("%d", repo.ID))
+
+		//if the directory already exists, we may need to nuke it
+		fi, err := os.Stat(path)
+		if err != nil && !os.IsNotExist(err) {
+			return "", err
+		} else if fi != nil {
+			_ = os.RemoveAll(path)
+		}
+
+		err = os.MkdirAll(path, 0755)
+		if err != nil && !os.IsExist(err) {
+			return "", err
+		}
+
+		logging.Debug.Printf("Checking out repo %s: %s", repo.Name, path)
+		_, err = git.PlainClone(path, false, &git.CloneOptions{
+			URL:           repo.Url,
+			SingleBranch:  true,
+			ReferenceName: plumbing.ReferenceName("refs/heads/" + repo.Branch),
 		})
-
 		if err != nil {
-			return
+			return "", err
+		}
+
+		existingPaths[repo.ID] = repoCache{
+			LastRefreshed: time.Now(),
+			Path:          path,
 		}
 	}
 
-	if templateRepoExpiredAt.Before(time.Now()) {
-		err = templateRepo.Fetch(&git.FetchOptions{})
-		if err == git.NoErrAlreadyUpToDate {
-			err = nil
-		}
-
-		if err != nil {
-			return
-		}
-	}
-
-	templateRepoExpiredAt = time.Now().Add(time.Minute * 5)
-	return
-}
-
-func (t *Template) getTemplateFiles() ([]templateFile, error) {
-	err := t.refreshGithub()
-	if err != nil {
-		return nil, err
-	}
-
-	templateCacheLocker.Lock()
-	defer templateCacheLocker.Unlock()
-
-	directories, err := templateFiles.ReadDir("/")
-	if err != nil {
-		return nil, err
-	}
-
-	results := make([]templateFile, 0)
-
-	for _, directory := range directories {
-		if !directory.IsDir() || pufferpanel.ContainsString(ignoredPaths, directory.Name()) {
-			continue
-		}
-
-		var files []os.FileInfo
-		files, err = templateFiles.ReadDir(directory.Name())
-		if err != nil {
-			return nil, err
-		}
-		for _, file := range files {
-			if file.IsDir() || !strings.HasSuffix(file.Name(), ".json") {
-				continue
-			}
-
-			var readme string
-
-			folder := filepath.Join("/", directory.Name())
-
-			testPath := filepath.Join(folder, strings.TrimSuffix(file.Name(), ".json")+".md")
-			if fi, err := templateFiles.Stat(testPath); err == nil && !fi.IsDir() {
-				readme = testPath
-			} else {
-				testPath = filepath.Join(folder, "README.md")
-				if fi, err = templateFiles.Stat(testPath); err == nil && !fi.IsDir() {
-					readme = testPath
-				}
-			}
-			results = append(results, templateFile{
-				Name:       strings.TrimSuffix(file.Name(), ".json"),
-				Path:       filepath.Join("/", directory.Name(), file.Name()),
-				ReadmePath: readme,
-			})
-		}
-	}
-
-	return results, nil
+	return existingPaths[repo.ID].Path, nil
 }

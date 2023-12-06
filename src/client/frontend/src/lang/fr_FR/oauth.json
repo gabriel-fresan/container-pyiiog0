@@ -1,0 +1,15 @@
+{
+  "Credentials": "Identifiants du client OAuth 2.0",
+  "ClientId": "ID du client",
+  "ClientSecret": "nom du client secret",
+  "NewClientWarning": "Nouveau client attention",
+  "Create": "creer",
+  "UnnamedClient": "client sans nom",
+  "Docs": "documentations",
+  "DeleteWarning": "attention supprimation",
+  "ConfirmDelete": "confirmer la supprimation \n",
+  "Delete": "Supprimer {clientName}?",
+  "Clients": "Clients",
+  "AccountDescription": "description du compte\n",
+  "ServerDescription": "description du serveur"
+}

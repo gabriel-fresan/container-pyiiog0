@@ -1,26 +1,14 @@
-/*
- Copyright 2020 Padduck, LLC
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  	http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
-
 package services
 
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/config"
-	"github.com/pufferpanel/pufferpanel/v2/models"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/config"
+	"github.com/pufferpanel/pufferpanel/v3/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"image"
@@ -58,18 +46,18 @@ func (us *User) GetById(id uint) (*models.User, error) {
 	return model, nil
 }
 
-func (us *User) Login(email string, password string) (user *models.User, sessionToken string, otpNeeded bool, err error) {
+func (us *User) ValidateLogin(email string, password string) (user *models.User, otpNeeded bool, err error) {
 	user = &models.User{
 		Email: email,
 	}
 
 	err = us.DB.Where(user).First(user).Error
 
-	if err != nil && gorm.ErrRecordNotFound != err {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return
 	}
 
-	if user.ID == 0 || gorm.ErrRecordNotFound == err {
+	if user.ID == 0 || errors.Is(err, gorm.ErrRecordNotFound) {
 		err = pufferpanel.ErrInvalidCredentials
 		return
 	}
@@ -83,23 +71,21 @@ func (us *User) Login(email string, password string) (user *models.User, session
 		otpNeeded = true
 		return
 	}
-
-	sessionToken, err = GenerateSession(user.ID)
 	return
 }
 
-func (us *User) LoginOtp(email string, token string) (user *models.User, sessionToken string, err error) {
+func (us *User) ValidOtp(email string, token string) (user *models.User, err error) {
 	user = &models.User{
 		Email: email,
 	}
 
 	err = us.DB.Where(user).First(user).Error
 
-	if err != nil && gorm.ErrRecordNotFound != err {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return
 	}
 
-	if user.ID == 0 || gorm.ErrRecordNotFound == err {
+	if user.ID == 0 || errors.Is(err, gorm.ErrRecordNotFound) {
 		err = pufferpanel.ErrInvalidCredentials
 		return
 	}
@@ -108,8 +94,6 @@ func (us *User) LoginOtp(email string, token string) (user *models.User, session
 		err = pufferpanel.ErrInvalidCredentials
 		return
 	}
-
-	sessionToken, err = GenerateSession(user.ID)
 	return
 }
 
@@ -136,9 +120,10 @@ func (us *User) Update(model *models.User) error {
 
 func (us *User) Delete(model *models.User) (err error) {
 	return us.DB.Transaction(func(tx *gorm.DB) error {
-		us.DB.Delete(models.Permissions{}, "user_id = ?", model.ID)
-		us.DB.Delete(models.Client{}, "user_id = ?", model.ID)
-		us.DB.Delete(models.User{}, "id = ?", model.ID)
+		tx.Delete(models.Permissions{}, "user_id = ?", model.ID)
+		tx.Delete(models.Client{}, "user_id = ?", model.ID)
+		tx.Delete(models.Session{}, "user_id = ?", model.ID)
+		tx.Delete(models.User{}, "id = ?", model.ID)
 		return nil
 	})
 }
@@ -171,7 +156,7 @@ func (us *User) GetOtpStatus(userId uint) (enabled bool, err error) {
 	return
 }
 
-func (us *User) StartOtpEnroll(userId uint) (secret string, img string, err error) {
+func (us *User) StartOtpEnroll(userId uint) (secret string, imgStr string, err error) {
 	user, err := us.GetById(userId)
 	if err != nil {
 		return
@@ -194,14 +179,14 @@ func (us *User) StartOtpEnroll(userId uint) (secret string, img string, err erro
 	}
 
 	var buf bytes.Buffer
-	var image image.Image
-	image, err = key.Image(256, 256)
+	var img image.Image
+	img, err = key.Image(256, 256)
 	if err != nil {
 		return
 	}
-	png.Encode(&buf, image)
-	img = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
+	png.Encode(&buf, img)
 
+	imgStr = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 	secret = key.Secret()
 	return
 }
@@ -235,8 +220,8 @@ func (us *User) DisableOtp(userId uint, token string) error {
 	return us.Update(user)
 }
 
-func (us *User) Search(usernameFilter, emailFilter string, pageSize, page uint) (*models.Users, int64, error) {
-	users := &models.Users{}
+func (us *User) Search(usernameFilter, emailFilter string, pageSize, page uint) ([]*models.User, int64, error) {
+	var users []*models.User
 
 	query := us.DB
 
@@ -258,7 +243,7 @@ func (us *User) Search(usernameFilter, emailFilter string, pageSize, page uint) 
 		return nil, 0, err
 	}
 
-	res := query.Offset(int((page - 1) * pageSize)).Limit(int(pageSize)).Find(users)
+	res := query.Offset(int((page - 1) * pageSize)).Limit(int(pageSize)).Find(&users)
 
 	return users, count, res.Error
 }

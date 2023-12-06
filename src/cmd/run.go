@@ -1,42 +1,27 @@
-/*
- Copyright 2020 Padduck, LLC
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  	http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
-
 package main
 
 import (
 	"encoding/hex"
+	"fmt"
 	"github.com/braintree/manners"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/config"
-	"github.com/pufferpanel/pufferpanel/v2/database"
-	"github.com/pufferpanel/pufferpanel/v2/environments"
-	"github.com/pufferpanel/pufferpanel/v2/logging"
-	"github.com/pufferpanel/pufferpanel/v2/programs"
-	"github.com/pufferpanel/pufferpanel/v2/services"
-	"github.com/pufferpanel/pufferpanel/v2/sftp"
-	"github.com/pufferpanel/pufferpanel/v2/web"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/config"
+	"github.com/pufferpanel/pufferpanel/v3/database"
+	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v3/servers"
+	"github.com/pufferpanel/pufferpanel/v3/services"
+	"github.com/pufferpanel/pufferpanel/v3/sftp"
+	"github.com/pufferpanel/pufferpanel/v3/web"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -69,8 +54,8 @@ func executeRun(cmd *cobra.Command, args []string) {
 	sftp.Stop()
 
 	logging.Debug.Printf("stopping servers")
-	programs.ShutdownService()
-	for _, p := range programs.GetAll() {
+	servers.ShutdownService()
+	for _, p := range servers.GetAll() {
 		_ = p.Stop()
 		p.RunningEnvironment.WaitForMainProcessFor(time.Minute) //wait 60 seconds
 	}
@@ -84,7 +69,7 @@ func internalRun(terminate chan bool) {
 	signal.Ignore(syscall.SIGPIPE, syscall.SIGHUP)
 
 	go func() {
-		quit := make(chan os.Signal)
+		quit := make(chan os.Signal, 1)
 		// kill (no param) default send syscall.SIGTERM
 		// kill -2 is syscall.SIGINT
 		// kill -9 is syscall.SIGKILL but can"t be catch, so don't need add it
@@ -150,8 +135,6 @@ func internalRun(terminate chan bool) {
 			terminate <- true
 		}
 	}()
-
-	return
 }
 
 func panel() {
@@ -164,9 +147,6 @@ func panel() {
 func daemon() error {
 	sftp.Run()
 
-	environments.LoadModules()
-	programs.Initialize()
-
 	var err error
 
 	if _, err = os.Stat(config.ServersFolder.Value()); os.IsNotExist(err) {
@@ -175,11 +155,6 @@ func daemon() error {
 		if err != nil && !os.IsExist(err) {
 			return err
 		}
-	}
-
-	//check if viper directly has a value for binaries, so we can migrate
-	if runtime.GOOS == "linux" && !viper.InConfig(config.BinariesFolder.Key()) {
-		_ = config.BinariesFolder.Set(filepath.Join(filepath.Dir(config.ServersFolder.Value()), "binaries"), true)
 	}
 
 	err = os.MkdirAll(config.BinariesFolder.Value(), 0755)
@@ -191,21 +166,20 @@ func daemon() error {
 	newPath := os.Getenv("PATH")
 	fullPath, _ := filepath.Abs(config.BinariesFolder.Value())
 	if !strings.Contains(newPath, fullPath) {
-		_ = os.Setenv("PATH", newPath+":"+fullPath)
+		_ = os.Setenv("PATH", fmt.Sprintf("%s%c%s", newPath, os.PathListSeparator, fullPath))
 	}
+	logging.Debug.Printf("Daemon PATH variable: %s", os.Getenv("PATH"))
 
-	programs.LoadFromFolder()
+	servers.LoadFromFolder()
 
-	programs.InitService()
+	servers.InitService()
 
-	for _, element := range programs.GetAll() {
-		if element.IsEnabled() {
-			element.GetEnvironment().DisplayToConsole(true, "Daemon has been started\n")
-			if element.IsAutoStart() {
-				logging.Info.Printf("Queued server %s", element.Id())
-				element.GetEnvironment().DisplayToConsole(true, "Server has been queued to start\n")
-				programs.StartViaService(element)
-			}
+	for _, element := range servers.GetAll() {
+		element.GetEnvironment().DisplayToConsole(true, "Daemon has been started\n")
+		if element.IsAutoStart() {
+			logging.Info.Printf("Queued server %s", element.Id())
+			element.GetEnvironment().DisplayToConsole(true, "Server has been queued to start\n")
+			servers.StartViaService(element)
 		}
 	}
 	return nil

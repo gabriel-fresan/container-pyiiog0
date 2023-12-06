@@ -1,0 +1,111 @@
+{
+  "Templates": "Skabeloner",
+  "NoTemplates": "Der er ingen skabeloner endnu",
+  "Deleted": "Skabelon slettet",
+  "New": "Opret ny skabelon",
+  "Edit": "Redigér skabelon",
+  "Editor": "Editor",
+  "Json": "JSON",
+  "Display": "Display Name",
+  "Type": "Type",
+  "Variables": "Variabler",
+  "Install": "Installér",
+  "AddInstallStep": "Tilføj Installationstrin",
+  "DeleteInstallStep": "Slet Installationstrin",
+  "Description": "Beskrivelse",
+  "DataType": "Datatype",
+  "DefaultValue": "Standardværdi",
+  "Required": "Påkrævet",
+  "UserEditable": "Brugere kan redigere",
+  "Value": "Værdi",
+  "AddOption": "Tilføje en mulighed",
+  "AddCommand": "Tilføj kommando",
+  "Filename": "Filnavn",
+  "Content": "Indhold",
+  "Source": "Kilde",
+  "Target": "Mål",
+  "Version": "Version",
+  "ReleaseType": "Udgivelsestype",
+  "AddFile": "Tilføj fil",
+  "AddVariable": "Tilføj variabel",
+  "Environment": "Miljø",
+  "Environments": "Miljøer",
+  "AddEnvironment": "Tilføj miljø",
+  "DefaultEnvironment": "Standard miljø",
+  "AddEnvVar": "Tilføj env variabel",
+  "EnvVars": "Miljøvariabler",
+  "DockerImage": "Docker Billede",
+  "SaveSuccess": "Gem skabelon",
+  "VarNameNoSpaces": "Et variabelnavn må ikke være tomt eller indeholde mellemrum",
+  "SupportedEnvironments": "Understøttede Miljøer",
+  "RunConfig": "Kør Opsætning",
+  "PreHook": "Pre Run Hook",
+  "PostHook": "Post Run Hook",
+  "AddPreStep": "Tilføj Pre Run Step",
+  "AddPostStep": "Tilføj Post Run Step",
+  "DeletePreStep": "Slet Pre Run Step",
+  "DeletePostStep": "Slet Post Run Step",
+  "Shutdown": "Luk ned",
+  "Command": "Kommando",
+  "WorkingDirectory": "Working Directory",
+  "Arguments": "Argumenter",
+  "AddArgument": "Add an argument",
+  "Convert": "Convert",
+  "OfferV1Convert": "This template json looks like a template for PufferPanel 1.x, do you want to automatically convert this to a template for PufferPanel 2.x?",
+  "import": {
+    "CommunityWarning": "These templates are made by the community and provided without any warranties",
+    "OverrideWarning": "WARNING: Imported templates WILL overwrite existing templates with the same ID",
+    "Import": "Import templates",
+    "Tooltip": "Import templates from the official repository",
+    "Select": "Select templates to import",
+    "Started": "Importing templates, please wait a moment",
+    "Successful": "Successfully imported template {template}",
+    "NoTemplatesTitle": "Do you want to import templates?",
+    "NoTemplatesContent": "You currently don't have any templates. Templates are necessary to create servers.<br/>Do you want to import some templates from the official PufferPanel templates repository now?"
+  },
+  "stop": {
+    "Command": "Command",
+    "Signal": "Signal"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "Download",
+      "files": "Files"
+    },
+    "command": {
+      "ProcessorName": "Run Command",
+      "commands": "Commands"
+    },
+    "alterfile": {
+      "ProcessorName": "Change file",
+      "regex": "Treat search as RegEx",
+      "search": "Text to search",
+      "replace": "Replace with"
+    },
+    "writefile": {
+      "ProcessorName": "Write to file",
+      "text": "Content"
+    },
+    "move": {
+      "ProcessorName": "Move File",
+      "source": "Source",
+      "target": "Target"
+    },
+    "mkdir": {
+      "ProcessorName": "Create Directory"
+    },
+    "mojangdl": {
+      "ProcessorName": "Download Minecraft"
+    },
+    "forgedl": {
+      "ProcessorName": "Download Minecraft Forge"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Download Minecraft SpongeForge",
+      "releaseType": "Release Type"
+    },
+    "fabricdl": {
+      "ProcessorName": "Download Minecraft Fabric"
+    }
+  }
+}

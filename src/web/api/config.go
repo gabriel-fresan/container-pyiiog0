@@ -2,17 +2,22 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pufferpanel/pufferpanel/v2/config"
+	"github.com/pufferpanel/pufferpanel/v3/config"
 	"net/http"
 	"os"
 	"strings"
 )
 
+// @Summary Get config
+// @Description Gets the editable config entries for the panel
+// @Success 200 {object} EditableConfig
+// @Router /api/config [get]
+// @Security OAuth2Application[none]
 func panelConfig(c *gin.Context) {
-	themes := []string{}
+	var themes []string
 	files, err := os.ReadDir(config.WebRoot.Value() + "/theme")
 	if err != nil {
-		themes = append(themes, "PufferPanel")
+		themes = []string{"PufferPanel"}
 	} else {
 		for _, f := range files {
 			if !f.IsDir() && strings.HasSuffix(f.Name(), ".tar") {
@@ -21,30 +26,31 @@ func panelConfig(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"themes": map[string]interface{}{
-			"active":    config.DefaultTheme.Value(),
-			"available": themes,
+	c.JSON(http.StatusOK, EditableConfig{
+		Themes: ThemeConfig{
+			Active:    config.DefaultTheme.Value(),
+			Settings:  config.ThemeSettings.Value(),
+			Available: themes,
 		},
-		"branding": map[string]interface{}{
-			"name": config.CompanyName.Value(),
+		Branding: BrandingConfig{
+			Name: config.CompanyName.Value(),
 		},
-		"registrationEnabled": config.RegistrationEnabled.Value(),
+		RegistrationEnabled: config.RegistrationEnabled.Value(),
 	})
 }
 
 type EditableConfig struct {
-	Themes              ThemeConfig
-	Branding            BrandingConfig
-	RegistrationEnabled bool
-}
+	Themes              ThemeConfig    `json:"themes"`
+	Branding            BrandingConfig `json:"branding"`
+	RegistrationEnabled bool           `json:"registrationEnabled"`
+} //@name EditableConfigSettings
 
 type ThemeConfig struct {
-	Active    string
-	Settings  string
-	Available []string
-}
+	Active    string   `json:"active" example:"default"`
+	Settings  string   `json:"settings" example:"{}"`
+	Available []string `json:"available" example:"alternativeTheme"`
+} //@name ThemeConfig
 
 type BrandingConfig struct {
-	Name string
-}
+	Name string `json:"name" example:"PufferPanel"`
+} //@name BrandingConfig

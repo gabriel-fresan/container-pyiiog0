@@ -1,21 +1,8 @@
-/*
- Copyright 2020 Padduck, LLC
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  	http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
-
 package services
 
 import (
-	"github.com/pufferpanel/pufferpanel/v2/models"
-	uuid2 "github.com/satori/go.uuid"
+	"github.com/gofrs/uuid/v5"
+	"github.com/pufferpanel/pufferpanel/v3/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"strings"
@@ -48,7 +35,7 @@ func (ss *Server) Search(searchCriteria ServerSearch) (records []*models.Server,
 	}
 
 	if searchCriteria.Username != "" {
-		query = query.Joins("JOIN permissions p ON servers.identifier = p.server_identifier AND p.view_server = '1'")
+		query = query.Joins("JOIN permissions p ON servers.identifier = p.server_identifier")
 		query = query.Joins("JOIN users ON p.user_id = users.id")
 		query = query.Where("users.username = ?", searchCriteria.Username)
 	}
@@ -78,7 +65,7 @@ func (ss *Server) Get(id string) (*models.Server, error) {
 		Identifier: id,
 	}
 
-	err := ss.DB.Where(model).Preload(clause.Associations).First(model).Error
+	err := ss.DB.Preload(clause.Associations).First(model).Error
 	if err != nil {
 		return nil, err
 	}
@@ -104,11 +91,6 @@ func (ss *Server) Delete(id string) error {
 		return err
 	}
 
-	err = ss.DB.Delete(models.Client{}, "server_id = ?", id).Error
-	if err != nil {
-		return err
-	}
-
 	err = ss.DB.Delete(model).Error
 	if err != nil {
 		return err
@@ -117,17 +99,19 @@ func (ss *Server) Delete(id string) error {
 	return nil
 }
 
-func (ss *Server) Create(model *models.Server) (err error) {
+func (ss *Server) Create(model *models.Server) error {
 	if model.Identifier == "" {
-		uuid := uuid2.NewV4()
-		generatedId := strings.ToUpper(uuid.String())[0:8]
+		uniqueId, err := uuid.NewV4()
+		if err != nil {
+			return err
+		}
+		generatedId := strings.ToUpper(uniqueId.String())[0:8]
 		model.Identifier = generatedId
 	}
 
 	res := ss.DB.Omit(clause.Associations).Create(model)
 	if res.Error != nil {
-		err = res.Error
-		return
+		return res.Error
 	}
-	return
+	return nil
 }

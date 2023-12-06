@@ -1,28 +1,13 @@
-/*
- Copyright 2022 PufferPanel
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
- 	http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
-
 package pufferpanel
 
 import (
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"pault.ag/go/debian/deb"
 	"strings"
 )
 
@@ -40,7 +25,7 @@ func ExtractTar(stream io.Reader, directory string) error {
 	}
 
 	var header *tar.Header
-	for true {
+	for {
 		header, err = tarReader.Next()
 		if err == io.EOF {
 			break
@@ -89,7 +74,7 @@ func ExtractTar(stream io.Reader, directory string) error {
 				return err
 			}
 		default:
-			return errors.New(fmt.Sprintf("uknown type: %s in %s", string([]byte{header.Typeflag}), header.Name))
+			return fmt.Errorf("uknown type: %s in %s", string([]byte{header.Typeflag}), header.Name)
 		}
 	}
 
@@ -101,19 +86,8 @@ func ExtractTarGz(gzipStream io.Reader, directory string) error {
 	if err != nil {
 		return err
 	}
-	defer uncompressedStream.Close()
+	defer Close(uncompressedStream)
 	return ExtractTar(uncompressedStream, directory)
-}
-
-func ExtractDeb(stream io.ReaderAt, directory string) error {
-	file, err := deb.Load(stream, directory)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	return ExtractTar(file.Data, directory)
 }
 
 func ExtractZip(name, directory string) error {
@@ -121,9 +95,9 @@ func ExtractZip(name, directory string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer Close(file)
 	for _, f := range file.File {
-		err = unzipFile(f, directory)
+		err = unzipFile(f, directory, false)
 		if err != nil {
 			return err
 		}
@@ -131,9 +105,66 @@ func ExtractZip(name, directory string) error {
 	return nil
 }
 
-func unzipFile(f *zip.File, destination string) error {
+func ExtractZipIgnoreSingleDir(name, directory string) error {
+	file, err := zip.OpenReader(name)
+	if err != nil {
+		return err
+	}
+	defer Close(file)
+
+	var fileList []string
+	for _, f := range file.File {
+		fileList = append(fileList, f.Name)
+	}
+
+	dirs := make(map[string]bool)
+	for _, f := range fileList {
+		folderName := filepath.Dir(f)
+		if folderName == ".." || folderName == "." || folderName == "/" {
+			folderName = "."
+		}
+		dirs[folderName] = true
+	}
+
+	isSingleDir := true
+	if len(dirs) > 0 {
+		var rootDir string
+		for k := range dirs {
+			if rootDir == "" {
+				firstPath := strings.SplitN(k, string(os.PathSeparator), 2)
+				rootDir = firstPath[0]
+			} else if rootDir != k && !strings.HasPrefix(k, rootDir+string(os.PathSeparator)) {
+				isSingleDir = false
+				break
+			}
+		}
+	}
+
+	for _, f := range file.File {
+		err = unzipFile(f, directory, isSingleDir)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func unzipFile(f *zip.File, destination string, skipLevel bool) error {
 	// 4. Check if file paths are not vulnerable to Zip Slip
-	filePath := filepath.Join(destination, f.Name)
+
+	fileName := f.Name
+	if skipLevel {
+		parts := strings.SplitN(fileName, "/", 2)
+		if len(parts) != 2 {
+			return nil
+		}
+		fileName = parts[1]
+		if fileName == "" {
+			return nil
+		}
+	}
+
+	filePath := filepath.Join(destination, fileName)
 	if !strings.HasPrefix(filePath, filepath.Clean(destination)+string(os.PathSeparator)) {
 		return fmt.Errorf("invalid file path: %s", filePath)
 	}
@@ -155,14 +186,14 @@ func unzipFile(f *zip.File, destination string) error {
 	if err != nil {
 		return err
 	}
-	defer destinationFile.Close()
+	defer Close(destinationFile)
 
 	// 7. Unzip the content of a file and copy it to the destination file
 	zippedFile, err := f.Open()
 	if err != nil {
 		return err
 	}
-	defer zippedFile.Close()
+	defer Close(zippedFile)
 
 	if _, err := io.Copy(destinationFile, zippedFile); err != nil {
 		return err

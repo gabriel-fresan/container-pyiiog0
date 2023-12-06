@@ -2,7 +2,8 @@ package database
 
 import (
 	"github.com/go-gormigrate/gormigrate/v2"
-	"github.com/pufferpanel/pufferpanel/v2/models"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/models"
 	"gorm.io/gorm"
 )
 
@@ -10,66 +11,41 @@ func migrate(dbConn *gorm.DB) error {
 
 	m := gormigrate.New(dbConn, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		{
-			ID: "1626910428",
+			ID: "1658926619",
 			Migrate: func(db *gorm.DB) error {
-				_ = db.Migrator().DropIndex(&models.Server{}, "uix_servers_name")
-				return nil
+				return db.Create(&models.TemplateRepo{
+					Name:   "community",
+					Url:    "https://github.com/pufferpanel/templates",
+					Branch: "v3",
+				}).Error
 			},
-			Rollback: nil,
 		},
 		{
-			ID: "1665609381",
+			ID: "1677250619",
 			Migrate: func(db *gorm.DB) error {
-				var nodes []*models.Node
-				err := db.Find(&nodes).Error
+				var templates []*models.Template
+				err := db.Find(&templates).Error
 				if err != nil {
 					return err
 				}
 
-				var local *models.Node
-				for _, n := range nodes {
-					if (n.PrivateHost == "localhost" || n.PrivateHost == "127.0.0.1") && (n.PublicHost == "localhost" || n.PublicHost == "127.0.0.1") {
-						local = n
+				for _, v := range templates {
+					var rawMap pufferpanel.MetadataType
+					err = pufferpanel.UnmarshalTo(v.Environment, &rawMap)
+					if err != nil {
+						return err
+					}
+					if rawMap.Type == "tty" || rawMap.Type == "standard" {
+						rawMap.Type = "host"
+						v.Environment = rawMap
+						err = db.Save(&v).Error
+						if err != nil {
+							return err
+						}
 					}
 				}
 
-				if local == nil {
-					return nil
-				}
-
-				err = db.Table("servers").Where("node_id = ?", local.ID).Update("node_id", nil).Error
-				if err != nil {
-					return err
-				}
-				err = db.Delete(local).Error
-				if err != nil {
-					return err
-				}
-
 				return nil
-			},
-		},
-		{
-			ID: "1677519979",
-			Migrate: func(db *gorm.DB) error {
-				err := db.Migrator().AlterColumn(&models.Client{}, "ServerId")
-				if err != nil {
-					return err
-				}
-				err = db.Table("clients").Where("server_id = ?", "").Update("server_id", nil).Error
-				return err
-			},
-		},
-		{
-			ID: "1677519987",
-			Migrate: func(db *gorm.DB) error {
-				err := db.Migrator().AlterColumn(&models.Server{}, "RawNodeID")
-				if err != nil {
-					return err
-				}
-
-				err = db.Table("servers").Where("node_id = ?", 0).Update("node_id", nil).Error
-				return err
 			},
 		},
 	})

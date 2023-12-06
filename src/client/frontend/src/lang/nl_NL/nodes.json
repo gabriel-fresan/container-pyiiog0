@@ -1,0 +1,20 @@
+{
+  "Node": "Node",
+  "Nodes": "Nodes",
+  "Edit": "Node Bewerken",
+  "Add": "Node Toevoegen",
+  "Update": "Node Bijwerken",
+  "Delete": "Node Verwijderen",
+  "PublicHost": "Openbare Host",
+  "PublicPort": "Openbare poort",
+  "PrivateHost": "Privé host",
+  "PrivatePort": "Privé poort",
+  "SftpPort": "SFTP Poort",
+  "WithPrivateAddress": "Gebruik een andere host/poort voor server communicatie",
+  "WithPrivateAddressHint": "Dit aparte adres wordt gebruikt wanneer het hoofdknooppunt met het nieuwe knooppunt moet praten. Nuttig als bijvoorbeeld de knooppunten in hetzelfde netwerk achter de NAVO zitten.",
+  "SaveConfig": "Configuratie Opslaan",
+  "SavePublicKey": "Publieke Sleutel Opslaan",
+  "DeploymentInstruction": "Op deze node te deployen, installeer PufferPanel op de nieuwe server en plaats het config bestand in `/etc/pufferpanel`<br/>Herstart PufferPanel op de nieuwe server daarna.",
+  "UpdateSuccess": "Node succesvol geüpdatet",
+  "UpdateError": "Fout bij het updaten van de node"
+}

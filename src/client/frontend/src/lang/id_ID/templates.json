@@ -1,0 +1,111 @@
+{
+  "Templates": "Templates",
+  "NoTemplates": "Disini belum ada template",
+  "Deleted": "Template dihapus",
+  "New": "Buat Templat Baru",
+  "Edit": "Edit Template",
+  "Editor": "Editor",
+  "Json": "JSON",
+  "Display": "Nama Tampilan",
+  "Type": "Jenis",
+  "Variables": "Variabel",
+  "Install": "Instal",
+  "AddInstallStep": "Tambahkan Langkah Instal",
+  "DeleteInstallStep": "Hapus Langkah Instal",
+  "Description": "Deskripsi",
+  "DataType": "Tipe Data",
+  "DefaultValue": "Nilai standar",
+  "Required": "Diperlukan",
+  "UserEditable": "Pengguna bisa mengedit",
+  "Value": "Nilai",
+  "AddOption": "Tambahkan pilihan",
+  "AddCommand": "Tambah command",
+  "Filename": "Nama File",
+  "Content": "Konten",
+  "Source": "Sumber",
+  "Target": "Target",
+  "Version": "Versi",
+  "ReleaseType": "Jenis Rilis",
+  "AddFile": "Tambah file",
+  "AddVariable": "Tambah variabel",
+  "Environment": "Environment",
+  "Environments": "Environment",
+  "AddEnvironment": "Tambah environment",
+  "DefaultEnvironment": "Environment standar",
+  "AddEnvVar": "Tambah env variabel",
+  "EnvVars": "Environment variables",
+  "DockerImage": "Docker Image",
+  "SaveSuccess": "Saved Template",
+  "VarNameNoSpaces": "A variable name cannot be empty or contain spaces",
+  "SupportedEnvironments": "Supported Environments",
+  "RunConfig": "Run Configuration",
+  "PreHook": "Pre Run Hook",
+  "PostHook": "Post Run Hook",
+  "AddPreStep": "Add Pre Run Step",
+  "AddPostStep": "Add Post Run Step",
+  "DeletePreStep": "Delete Pre Run Step",
+  "DeletePostStep": "Delete Post Run Step",
+  "Shutdown": "Matikan",
+  "Command": "Perintah",
+  "WorkingDirectory": "Working Directory",
+  "Arguments": "Arguments",
+  "AddArgument": "Tambahkan Arguments",
+  "Convert": "Convert",
+  "OfferV1Convert": "This template json looks like a template for PufferPanel 1.x, do you want to automatically convert this to a template for PufferPanel 2.x?",
+  "import": {
+    "CommunityWarning": "These templates are made by the community and provided without any warranties",
+    "OverrideWarning": "WARNING: Imported templates WILL overwrite existing templates with the same ID",
+    "Import": "Import templates",
+    "Tooltip": "Import templates from the official repository",
+    "Select": "Select templates to import",
+    "Started": "Importing templates, please wait a moment",
+    "Successful": "Successfully imported template {template}",
+    "NoTemplatesTitle": "Do you want to import templates?",
+    "NoTemplatesContent": "You currently don't have any templates. Templates are necessary to create servers.<br/>Do you want to import some templates from the official PufferPanel templates repository now?"
+  },
+  "stop": {
+    "Command": "Command",
+    "Signal": "Signal"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "Download",
+      "files": "Files"
+    },
+    "command": {
+      "ProcessorName": "Run Command",
+      "commands": "Commands"
+    },
+    "alterfile": {
+      "ProcessorName": "Change file",
+      "regex": "Treat search as RegEx",
+      "search": "Text to search",
+      "replace": "Replace with"
+    },
+    "writefile": {
+      "ProcessorName": "Write to file",
+      "text": "Content"
+    },
+    "move": {
+      "ProcessorName": "Move File",
+      "source": "Source",
+      "target": "Target"
+    },
+    "mkdir": {
+      "ProcessorName": "Create Directory"
+    },
+    "mojangdl": {
+      "ProcessorName": "Download Minecraft"
+    },
+    "forgedl": {
+      "ProcessorName": "Download Minecraft Forge"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Download Minecraft SpongeForge",
+      "releaseType": "Release Type"
+    },
+    "fabricdl": {
+      "ProcessorName": "Download Minecraft Fabric"
+    }
+  }
+}

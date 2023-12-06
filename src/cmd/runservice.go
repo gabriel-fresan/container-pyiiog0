@@ -1,10 +1,9 @@
 //go:build windows
-// +build windows
 
 package main
 
 import (
-	"github.com/pufferpanel/pufferpanel/v2/logging"
+	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/spf13/cobra"
 	"golang.org/x/sys/windows/svc"
 )
@@ -34,14 +33,11 @@ func (m *service) Execute(args []string, r <-chan svc.ChangeRequest, changes cha
 	internalRun(term)
 
 loop:
-	for {
-		select {
-		case c := <-r:
-			switch c.Cmd {
-			case svc.Stop, svc.Shutdown:
-				logging.Info.Printf("Received stop command\n")
-				break loop
-			}
+	for c := range r {
+		switch c.Cmd {
+		case svc.Stop, svc.Shutdown:
+			logging.Info.Printf("Received stop command\n")
+			break loop
 		}
 	}
 	changes <- svc.Status{State: svc.StopPending}

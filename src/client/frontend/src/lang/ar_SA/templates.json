@@ -1,0 +1,111 @@
+{
+  "Templates": "القوالب",
+  "NoTemplates": "لا توجد قوالب هنا حتى الآن",
+  "Deleted": "تم حذف القالب",
+  "New": "إنشاء قالب جديد",
+  "Edit": "تحرير قالب",
+  "Editor": "المحرر",
+  "Json": "JSON",
+  "Display": "الإسم الظاهر",
+  "Type": "نوع",
+  "Variables": "المتغيرات",
+  "Install": "تثبيت",
+  "AddInstallStep": "إضافة خطوة التثبيت",
+  "DeleteInstallStep": "حذف خطوة التثبيت",
+  "Description": "الوصف",
+  "DataType": "نوع البيانات",
+  "DefaultValue": "القيمة الافتراضية",
+  "Required": "مطلوب",
+  "UserEditable": "يمكن للمستخدمين التعديل",
+  "Value": "القيمة",
+  "AddOption": "إضافة خيار",
+  "AddCommand": "إضافة أمر",
+  "Filename": "اسم الملفّ",
+  "Content": "المحتوى",
+  "Source": "المصدر",
+  "Target": "الهدف",
+  "Version": "الإصدار",
+  "ReleaseType": "Release Type",
+  "AddFile": "إضافة ملف",
+  "AddVariable": "إضافة متغير",
+  "Environment": "Environment",
+  "Environments": "Environments",
+  "AddEnvironment": "Add environment",
+  "DefaultEnvironment": "Default environment",
+  "AddEnvVar": "Add env variable",
+  "EnvVars": "Environment variables",
+  "DockerImage": "Docker Image",
+  "SaveSuccess": "Saved Template",
+  "VarNameNoSpaces": "اسم المتغير لا يمكن أن يكون فارغاً أو يحتوي على مسافات",
+  "SupportedEnvironments": "Supported Environments",
+  "RunConfig": "Run Configuration",
+  "PreHook": "Pre Run Hook",
+  "PostHook": "Post Run Hook",
+  "AddPreStep": "Add Pre Run Step",
+  "AddPostStep": "Add Post Run Step",
+  "DeletePreStep": "Delete Pre Run Step",
+  "DeletePostStep": "Delete Post Run Step",
+  "Shutdown": "Shutdown",
+  "Command": "Command",
+  "WorkingDirectory": "Working Directory",
+  "Arguments": "Arguments",
+  "AddArgument": "Add an argument",
+  "Convert": "Convert",
+  "OfferV1Convert": "This template json looks like a template for PufferPanel 1.x, do you want to automatically convert this to a template for PufferPanel 2.x?",
+  "import": {
+    "CommunityWarning": "These templates are made by the community and provided without any warranties",
+    "OverrideWarning": "WARNING: Imported templates WILL overwrite existing templates with the same ID",
+    "Import": "Import templates",
+    "Tooltip": "Import templates from the official repository",
+    "Select": "Select templates to import",
+    "Started": "Importing templates, please wait a moment",
+    "Successful": "Successfully imported template {template}",
+    "NoTemplatesTitle": "Do you want to import templates?",
+    "NoTemplatesContent": "You currently don't have any templates. Templates are necessary to create servers.<br/>Do you want to import some templates from the official PufferPanel templates repository now?"
+  },
+  "stop": {
+    "Command": "Command",
+    "Signal": "Signal"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "تحميل",
+      "files": "الملفات"
+    },
+    "command": {
+      "ProcessorName": "Run Command",
+      "commands": "Commands"
+    },
+    "alterfile": {
+      "ProcessorName": "تغيير الملف",
+      "regex": "Treat search as RegEx",
+      "search": "Text to search",
+      "replace": "استبدل بـ"
+    },
+    "writefile": {
+      "ProcessorName": "Write to file",
+      "text": "محتوى"
+    },
+    "move": {
+      "ProcessorName": "نقل الملف",
+      "source": "المصدر",
+      "target": "الهدف"
+    },
+    "mkdir": {
+      "ProcessorName": "Create Directory"
+    },
+    "mojangdl": {
+      "ProcessorName": "تحميل Minecraft"
+    },
+    "forgedl": {
+      "ProcessorName": "Download Minecraft Forge"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Download Minecraft SpongeForge",
+      "releaseType": "Release Type"
+    },
+    "fabricdl": {
+      "ProcessorName": "Download Minecraft Fabric"
+    }
+  }
+}

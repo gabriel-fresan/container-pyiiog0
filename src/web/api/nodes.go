@@ -1,57 +1,47 @@
-/*
- Copyright 2018 Padduck, LLC
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
- 	http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
-
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/middleware"
-	"github.com/pufferpanel/pufferpanel/v2/middleware/handlers"
-	"github.com/pufferpanel/pufferpanel/v2/models"
-	"github.com/pufferpanel/pufferpanel/v2/response"
-	"github.com/pufferpanel/pufferpanel/v2/services"
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid/v5"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/middleware"
+	"github.com/pufferpanel/pufferpanel/v3/models"
+	"github.com/pufferpanel/pufferpanel/v3/response"
+	"github.com/pufferpanel/pufferpanel/v3/services"
+	"github.com/pufferpanel/pufferpanel/v3/web/daemon"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 func registerNodes(g *gin.RouterGroup) {
-	g.Handle("GET", "", handlers.OAuth2Handler(pufferpanel.ScopeNodesView, false), getAllNodes)
-	g.Handle("POST", "", handlers.OAuth2Handler(pufferpanel.ScopeNodesEdit, false), createNode)
+	g.Handle("GET", "", middleware.RequiresPermission(pufferpanel.ScopeNodesView), getAllNodes)
+	g.Handle("POST", "", middleware.RequiresPermission(pufferpanel.ScopeNodesCreate), createNode)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET", "POST"))
 
-	g.Handle("GET", "/:id", handlers.OAuth2Handler(pufferpanel.ScopeNodesView, false), getNode)
-	g.Handle("PUT", "/:id", handlers.OAuth2Handler(pufferpanel.ScopeNodesEdit, false), updateNode)
-	g.Handle("DELETE", "/:id", handlers.OAuth2Handler(pufferpanel.ScopeNodesEdit, false), deleteNode)
-	g.Handle("OPTIONS", "/:id", response.CreateOptions("PUT", "GET", "POST", "DELETE"))
+	g.Handle("GET", "/:id", middleware.RequiresPermission(pufferpanel.ScopeNodesView), getNode)
+	g.Handle("PUT", "/:id", middleware.RequiresPermission(pufferpanel.ScopeNodesEdit), updateNode)
+	g.Handle("DELETE", "/:id", middleware.RequiresPermission(pufferpanel.ScopeNodesDelete), deleteNode)
+	g.Handle("OPTIONS", "/:id", response.CreateOptions("PUT", "GET", "DELETE"))
 
-	g.Handle("GET", "/:id/deployment", handlers.OAuth2Handler(pufferpanel.ScopeNodesDeploy, false), deployNode)
+	g.Handle("GET", "/:id/features", middleware.RequiresPermission(pufferpanel.ScopeNodesView), getFeatures)
+	g.Handle("OPTIONS", "/:id/features", response.CreateOptions("GET"))
+
+	g.Handle("GET", "/:id/deployment", middleware.RequiresPermission(pufferpanel.ScopeNodesDeploy), deployNode)
 	g.Handle("OPTIONS", "/:id/deployment", response.CreateOptions("GET"))
 }
 
 // @Summary Get nodes
 // @Description Gets all nodes registered to the panel
-// @Accept json
-// @Produce json
 // @Success 200 {object} models.NodesView "Nodes"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Error
-// @Failure 404 {object} response.Error
-// @Failure 500 {object} response.Error
+// @Failure 400 {object} pufferpanel.ErrorResponse
+// @Failure 403 {object} pufferpanel.ErrorResponse
+// @Failure 404 {object} pufferpanel.ErrorResponse
+// @Failure 500 {object} pufferpanel.ErrorResponse
 // @Router /api/nodes [get]
+// @Security OAuth2Application[nodes.view]
 func getAllNodes(c *gin.Context) {
 	var err error
 	db := middleware.GetDatabase(c)
@@ -62,20 +52,20 @@ func getAllNodes(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.FromNodes(nodes))
+	data := models.FromNodes(nodes)
+	c.JSON(http.StatusOK, data)
 }
 
 // @Summary Get node
 // @Description Gets information about a single node
-// @Accept json
-// @Produce json
 // @Success 200 {object} models.NodeView "Nodes"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Error
-// @Failure 404 {object} response.Error
-// @Failure 500 {object} response.Error
+// @Failure 400 {object} pufferpanel.ErrorResponse
+// @Failure 403 {object} pufferpanel.ErrorResponse
+// @Failure 404 {object} pufferpanel.ErrorResponse
+// @Failure 500 {object} pufferpanel.ErrorResponse
 // @Param id path string true "Node Id"
 // @Router /api/nodes/{id} [get]
+// @Security OAuth2Application[nodes.view]
 func getNode(c *gin.Context) {
 	var err error
 	db := middleware.GetDatabase(c)
@@ -97,14 +87,13 @@ func getNode(c *gin.Context) {
 
 // @Summary Create node
 // @Description Creates a node
-// @Accept json
-// @Produce json
 // @Success 200 {object} models.NodeView "Node created"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Error
-// @Failure 404 {object} response.Error
-// @Failure 500 {object} response.Error
+// @Failure 400 {object} pufferpanel.ErrorResponse
+// @Failure 403 {object} pufferpanel.ErrorResponse
+// @Failure 404 {object} pufferpanel.ErrorResponse
+// @Failure 500 {object} pufferpanel.ErrorResponse
 // @Router /api/nodes [post]
+// @Security OAuth2Application[nodes.create]
 func createNode(c *gin.Context) {
 	var err error
 	db := middleware.GetDatabase(c)
@@ -121,7 +110,13 @@ func createNode(c *gin.Context) {
 
 	create := &models.Node{}
 	model.CopyToModel(create)
-	create.Secret = strings.Replace(uuid.NewV4().String(), "-", "", -1)
+
+	srt, err := uuid.NewV4()
+	if response.HandleError(c, err, http.StatusInternalServerError) {
+		return
+	}
+
+	create.Secret = strings.Replace(srt.String(), "-", "", -1)
 	if err = ns.Create(create); response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
@@ -131,16 +126,15 @@ func createNode(c *gin.Context) {
 
 // @Summary Update node
 // @Description Updates a node with given information
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Error
-// @Failure 404 {object} response.Error
-// @Failure 500 {object} response.Error
+// @Success 204 {object} nil
+// @Failure 400 {object} pufferpanel.ErrorResponse
+// @Failure 403 {object} pufferpanel.ErrorResponse
+// @Failure 404 {object} pufferpanel.ErrorResponse
+// @Failure 500 {object} pufferpanel.ErrorResponse
 // @Param id path string true "Node Id"
 // @Param node body models.NodeView true "Node information"
 // @Router /api/nodes/{id} [put]
+// @Security OAuth2Application[nodes.edit]
 func updateNode(c *gin.Context) {
 	var err error
 	db := middleware.GetDatabase(c)
@@ -175,15 +169,14 @@ func updateNode(c *gin.Context) {
 
 // @Summary Deletes a node
 // @Description Deletes the node
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Error
-// @Failure 404 {object} response.Error
-// @Failure 500 {object} response.Error
+// @Success 204 {object} nil
+// @Failure 400 {object} pufferpanel.ErrorResponse
+// @Failure 403 {object} pufferpanel.ErrorResponse
+// @Failure 404 {object} pufferpanel.ErrorResponse
+// @Failure 500 {object} pufferpanel.ErrorResponse
 // @Param id path string true "Node Id"
 // @Router /api/nodes/{id} [delete]
+// @Security OAuth2Application[nodes.delete]
 func deleteNode(c *gin.Context) {
 	var err error
 	db := middleware.GetDatabase(c)
@@ -209,15 +202,14 @@ func deleteNode(c *gin.Context) {
 
 // @Summary Gets the data to deploy a node
 // @Description Gets the secret information needed to deploy a node.
-// @Accept json
-// @Produce json
 // @Success 200 {object} models.Deployment
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Error
-// @Failure 404 {object} response.Error
-// @Failure 500 {object} response.Error
+// @Failure 400 {object} pufferpanel.ErrorResponse
+// @Failure 403 {object} pufferpanel.ErrorResponse
+// @Failure 404 {object} pufferpanel.ErrorResponse
+// @Failure 500 {object} pufferpanel.ErrorResponse
 // @Param id path string true "Node Id"
 // @Router /api/nodes/{id}/deployment [get]
+// @Security OAuth2Application[nodes.deploy]
 func deployNode(c *gin.Context) {
 	var err error
 	db := middleware.GetDatabase(c)
@@ -239,6 +231,46 @@ func deployNode(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, data)
+}
+
+// @Summary Gets the features a node supports
+// @Description Gets the environments and if docker is supported on a node
+// @Success 200 {object} daemon.Features
+// @Failure 400 {object} pufferpanel.ErrorResponse
+// @Failure 403 {object} pufferpanel.ErrorResponse
+// @Failure 404 {object} pufferpanel.ErrorResponse
+// @Failure 500 {object} pufferpanel.ErrorResponse
+// @Param id path string true "Node Id"
+// @Router /api/nodes/{id}/features [get]
+// @Security OAuth2Application[nodes.view]
+func getFeatures(c *gin.Context) {
+	var err error
+	db := middleware.GetDatabase(c)
+	ns := &services.Node{DB: db}
+
+	id, ok := validateId(c)
+	if !ok {
+		return
+	}
+
+	node, err := ns.Get(id)
+	if response.HandleError(c, err, http.StatusInternalServerError) {
+		return
+	}
+
+	res, err := ns.CallNode(node, "GET", "/daemon/features", nil, nil)
+	if response.HandleError(c, err, http.StatusInternalServerError) {
+		return
+	}
+	defer pufferpanel.CloseResponse(res)
+
+	features := &daemon.Features{}
+	err = json.NewDecoder(res.Body).Decode(&features)
+	if response.HandleError(c, err, http.StatusInternalServerError) {
+		return
+	}
+
+	c.JSON(http.StatusOK, features)
 }
 
 func validateId(c *gin.Context) (uint, bool) {

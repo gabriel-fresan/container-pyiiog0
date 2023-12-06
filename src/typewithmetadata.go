@@ -1,67 +1,134 @@
-/*
- Copyright 2020 Padduck, LLC
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  	http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
-
 package pufferpanel
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 )
 
-//designed to be overridden
+// MetadataType designed to be overridden
 type MetadataType struct {
 	Type     string                 `json:"type,omitempty"`
-	Metadata map[string]interface{} `json:"-,omitempty"`
-}
+	Metadata map[string]interface{} `json:"-"`
+} //@name Metadata
 
-//parses a type with this declaration, storing what it needs into metadata and type
-func (t *MetadataType) UnmarshalJSON(bs []byte) (err error) {
-	err = json.Unmarshal(bs, &t.Metadata)
+type ConditionalMetadataType struct {
+	If string `json:"if,omitempty"`
+	MetadataType
+} //@name MetadataWithIf
+
+// UnmarshalJSON parses a type with this declaration, storing what it needs into metadata and type
+func (t *MetadataType) UnmarshalJSON(bs []byte) error {
+	err := json.Unmarshal(bs, &t.Metadata)
 	if err != nil {
-		return
+		return err
 	}
+
 	a := t.Metadata["type"]
-	if a == nil {
-		return errors.New("no type defined")
-	}
 	var ok bool
 	t.Type, ok = a.(string)
-	if !ok {
-		return errors.New(fmt.Sprintf("type is of %s instead of string", reflect.TypeOf(a)))
+	if !ok && reflect.TypeOf(a) != reflect.TypeOf(nil) {
+		return fmt.Errorf("type is of %s instead of string", reflect.TypeOf(a))
 	}
 
 	delete(t.Metadata, "type")
-	return
+	return nil
 }
 
 func (t *MetadataType) MarshalJSON() ([]byte, error) {
-	newMapping := make(map[string]interface{})
-	for k, v := range t.Metadata {
-		newMapping[k] = v
+	var buf bytes.Buffer
+	buf.WriteString("{ ")
+
+	err := encode(&buf, "type", t.Type)
+	if err != nil {
+		return nil, err
 	}
-	newMapping["type"] = t.Type
-	return json.Marshal(newMapping)
+
+	for k, v := range t.Metadata {
+		buf.WriteString(", ")
+		err = encode(&buf, k, v)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	buf.WriteString(" }")
+	return buf.Bytes(), nil
 }
 
-//Parses the metadata into the target interface
-func (t *MetadataType) ParseMetadata(target interface{}) (err error) {
-	data, err := json.Marshal(t)
+// ParseMetadata Parses the metadata into the target interface
+func (t *MetadataType) ParseMetadata(target interface{}) error {
+	return UnmarshalTo(t, target)
+}
+
+// UnmarshalJSON parses a type with this declaration, storing what it needs into metadata and type
+func (t *ConditionalMetadataType) UnmarshalJSON(bs []byte) error {
+	err := json.Unmarshal(bs, &t.Metadata)
 	if err != nil {
-		return
+		return err
 	}
 
-	err = json.Unmarshal(data, &target)
-	return
+	a := t.Metadata["type"]
+	var ok bool
+	t.Type, ok = a.(string)
+	if !ok && reflect.TypeOf(a) != reflect.TypeOf(nil) {
+		return fmt.Errorf("type is of %s instead of string", reflect.TypeOf(a))
+	}
+
+	a, exists := t.Metadata["if"]
+	if exists {
+		t.If, ok = a.(string)
+		if !ok && reflect.TypeOf(a) != reflect.TypeOf(nil) {
+			return fmt.Errorf("if is of %s instead of string", reflect.TypeOf(a))
+		}
+	}
+
+	delete(t.Metadata, "type")
+	delete(t.Metadata, "if")
+	return nil
+}
+
+func (t *ConditionalMetadataType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	buf.WriteString("{ ")
+
+	var err error
+	if t.If != "" {
+		err = encode(&buf, "if", t.If)
+		if err != nil {
+			return nil, err
+		}
+		buf.WriteString(", ")
+	}
+
+	err = encode(&buf, "type", t.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range t.Metadata {
+		buf.WriteString(", ")
+		err = encode(&buf, k, v)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	buf.WriteString(" }")
+	return buf.Bytes(), nil
+}
+
+// ParseMetadata Parses the metadata into the target interface
+func (t *ConditionalMetadataType) ParseMetadata(target interface{}) error {
+	return UnmarshalTo(t, target)
+}
+
+func encode(buf *bytes.Buffer, k string, v any) error {
+	d, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	buf.WriteString("\"" + k + "\": " + string(d) + "")
+	return nil
 }

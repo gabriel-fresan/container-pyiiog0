@@ -1,39 +1,27 @@
-/*
- Copyright 2019 Padduck, LLC
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  	http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
-
 package models
 
 import (
-	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v3"
 	"gopkg.in/go-playground/validator.v9"
 )
 
 type ServerView struct {
-	Identifier string           `json:"id,omitempty"`
-	Name       string           `json:"name,omitempty"`
-	NodeId     uint             `json:"nodeId,omitempty"`
-	Node       *NodeView        `json:"node,omitempty"`
-	Data       interface{}      `json:"data,omitempty"`
-	Users      []ServerUserView `json:"users,omitempty"`
-	IP         string           `json:"ip,omitempty"`
-	Port       uint16           `json:"port,omitempty"`
-	Type       string           `json:"type"`
-}
+	Identifier   string           `json:"id,omitempty"`
+	Name         string           `json:"name,omitempty"`
+	NodeId       uint             `json:"nodeId,omitempty"`
+	Node         *NodeView        `json:"node,omitempty"`
+	Data         interface{}      `json:"data,omitempty"`
+	Users        []ServerUserView `json:"users,omitempty"`
+	IP           string           `json:"ip,omitempty"`
+	Port         uint16           `json:"port,omitempty"`
+	Type         string           `json:"type"`
+	CanGetStatus bool             `json:"canGetStatus,omitempty"`
+} //@name ServerInfo
 
 type ServerUserView struct {
 	Username string   `json:"username"`
 	Scopes   []string `json:"scopes"`
-}
+} //@name ServerUser
 
 func FromServer(server *Server) *ServerView {
 	model := &ServerView{
@@ -43,9 +31,8 @@ func FromServer(server *Server) *ServerView {
 		IP:         server.IP,
 		Port:       server.Port,
 		Type:       server.Type,
+		Node:       FromNode(&server.Node),
 	}
-
-	model.Node = FromNode(&server.Node)
 
 	return model
 }
