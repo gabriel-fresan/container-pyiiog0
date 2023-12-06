@@ -1,0 +1,111 @@
+{
+  "Templates": "Szablony",
+  "NoTemplates": "Brak szablonów",
+  "Deleted": "Szablon został usunięty",
+  "New": "Utwórz nowy szablon",
+  "Edit": "Edytuj szablon",
+  "Editor": "Edytor",
+  "Json": "JSON",
+  "Display": "Wyświetlana nazwa",
+  "Type": "Typ",
+  "Variables": "Zmienne",
+  "Install": "Zainstaluj",
+  "AddInstallStep": "Dodaj krok instalacji",
+  "DeleteInstallStep": "Usuń krok instalacji",
+  "Description": "Opis",
+  "DataType": "Typ Danych",
+  "DefaultValue": "Wartość domyślna",
+  "Required": "Wymagane?",
+  "UserEditable": "Użytkownicy mogą edytować",
+  "Value": "Wartość",
+  "AddOption": "Dodaj Opcję",
+  "AddCommand": "Dodaj polecenie",
+  "Filename": "Nazwa pliku",
+  "Content": "Zawartość",
+  "Source": "Źródło",
+  "Target": "Cel",
+  "Version": "Wersja",
+  "ReleaseType": "Typ wydania",
+  "AddFile": "Dodaj plik",
+  "AddVariable": "Dodaj zmienną",
+  "Environment": "Środowisko",
+  "Environments": "Środowisko",
+  "AddEnvironment": "Dodaj środowisko",
+  "DefaultEnvironment": "Domyślne środowisko",
+  "AddEnvVar": "Dodaj zmienną",
+  "EnvVars": "Zmienne środowiskowe",
+  "DockerImage": "Obrazy Dokera",
+  "SaveSuccess": "Zapisane szablony",
+  "VarNameNoSpaces": "Nazwa zmiennej nie może być pusta ani zawierać spacji",
+  "SupportedEnvironments": "Wspierane środowisko",
+  "RunConfig": "Uruchom konfigurację",
+  "PreHook": "Hak Przed Uruchomieniem",
+  "PostHook": "Hak Po Uruchomieniu",
+  "AddPreStep": "Dodaj Hak Przed Uruchomieniem",
+  "AddPostStep": "Dodaj Hak Po Uruchomieniu",
+  "DeletePreStep": "Usuń krok instalacji",
+  "DeletePostStep": "Usuń krok instalacji",
+  "Shutdown": "Zamknij",
+  "Command": "Komenda",
+  "WorkingDirectory": "Katalog Roboczy",
+  "Arguments": "Argumenty",
+  "AddArgument": "Dodaj argument",
+  "Convert": "Konwertuj",
+  "OfferV1Convert": "Ten szablon json wygląda jak szablon wersji PufferPanel 1.x, czy chcesz go automatycznie przekonwertować na szablon wersji PufferPanel 2.x?",
+  "import": {
+    "CommunityWarning": "Te szablony są tworzone przez społeczność i dostarczane bez żadnych gwarancji",
+    "OverrideWarning": "OSTRZEŻENIE: Zaimportowane szablony zostaną nadpiszą istniejące szablony o tym samym ID",
+    "Import": "Importuj szablony",
+    "Tooltip": "Importuj szablony z oficjalnego repozytorium",
+    "Select": "Wybierz szablony do importowania",
+    "Started": "Importowanie szablonów, proszę poczekać chwilę",
+    "Successful": "Pomyślnie zaimportowano szablon {template}",
+    "NoTemplatesTitle": "Czy chcesz zaimportować szablony?",
+    "NoTemplatesContent": "Obecnie nie masz żadnych szablonów. Szablony są niezbędne do tworzenia serwerów.<br/>Czy chcesz zaimportować niektóre szablony z oficjalnego repozytorium PufferPanel szablonów?"
+  },
+  "stop": {
+    "Command": "Komenda",
+    "Signal": "Sygnał"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "Pobierz",
+      "files": "Pliki"
+    },
+    "command": {
+      "ProcessorName": "Uruchom polecenie",
+      "commands": "Polecenia"
+    },
+    "alterfile": {
+      "ProcessorName": "Zmień plik",
+      "regex": "Traktuj wyszukiwanie jako RegEx",
+      "search": "Tekst do wyszukania",
+      "replace": "Zamień na"
+    },
+    "writefile": {
+      "ProcessorName": "Zapisz do pliku",
+      "text": "Zawartość"
+    },
+    "move": {
+      "ProcessorName": "Przenieś plik",
+      "source": "Źródło",
+      "target": "Cel"
+    },
+    "mkdir": {
+      "ProcessorName": "Utwórz katalog"
+    },
+    "mojangdl": {
+      "ProcessorName": "Pobierz Minecraft"
+    },
+    "forgedl": {
+      "ProcessorName": "Pobierz Minecraft Forge"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Pobierz Minecraft SpongeForge",
+      "releaseType": "Typ wydania"
+    },
+    "fabricdl": {
+      "ProcessorName": "Pobierz Minecraft Fabric"
+    }
+  }
+}

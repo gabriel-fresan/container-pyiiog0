@@ -1,0 +1,111 @@
+{
+  "Templates": "Templates",
+  "NoTemplates": "Er zijn nog geen templates",
+  "Deleted": "Template verwijderd",
+  "New": "Maak nieuw template",
+  "Edit": "Bewerkt template",
+  "Editor": "Bewerker",
+  "Json": "JSON",
+  "Display": "Naam",
+  "Type": "Type",
+  "Variables": "Variabelen",
+  "Install": "Installeren",
+  "AddInstallStep": "Installeer stap toevoegen",
+  "DeleteInstallStep": "Verwijder installeer stap",
+  "Description": "Beschrijving",
+  "DataType": "Gevenstype",
+  "DefaultValue": "Standaard waarde",
+  "Required": "Verplicht",
+  "UserEditable": "Gebruikers kunnen dit bewerken",
+  "Value": "Waarde",
+  "AddOption": "Voeg een optie toe",
+  "AddCommand": "Voeg een commando toe",
+  "Filename": "Bestands naam",
+  "Content": "Inhoud",
+  "Source": "Bron",
+  "Target": "Doel",
+  "Version": "Versie",
+  "ReleaseType": "Versietype",
+  "AddFile": "Bestand toevoegen",
+  "AddVariable": "Variabele toevoegen",
+  "Environment": "Omgeving",
+  "Environments": "Omgeving",
+  "AddEnvironment": "Omgeving toevoegen",
+  "DefaultEnvironment": "Standaard omgeving",
+  "AddEnvVar": "Voeg nieuwe variabele",
+  "EnvVars": "Omgevingsvariabelen",
+  "DockerImage": "Docker afbeelding",
+  "SaveSuccess": "Opgeslagen Templates",
+  "VarNameNoSpaces": "Een variabelenaam mag niet leeg zijn of spaties bevatten",
+  "SupportedEnvironments": "Ondersteunde Omgevingen",
+  "RunConfig": "Configuratie starten",
+  "PreHook": "Pre Run Hook",
+  "PostHook": "Laad Run Hook",
+  "AddPreStep": "Voeg Pre Run Stap toe",
+  "AddPostStep": "Voeg post-run-stap toe",
+  "DeletePreStep": "Verwijder Pre Run Stap",
+  "DeletePostStep": "Verwijder post-run-stap",
+  "Shutdown": "Afsluiten",
+  "Command": "Commando",
+  "WorkingDirectory": "Werkmap",
+  "Arguments": "Parameters",
+  "AddArgument": "Argument toevoegen",
+  "Convert": "Converteer",
+  "OfferV1Convert": "Deze template json ziet eruit als een template voor PufferPanel 1.x, wilt u dit automatisch omzetten naar een template voor PufferPanel 2.x?",
+  "import": {
+    "CommunityWarning": "These templates are made by the community and provided without any warranties",
+    "OverrideWarning": "WAARSCHUWING: Geimporteerde templates overschrijven bestaande sjablonen met dezelfde ID",
+    "Import": "Sjabloon importeren",
+    "Tooltip": "Sjablonen importeren uit de officiële repository",
+    "Select": "Selecteer sjablonen om te importeren",
+    "Started": "Sjablonen importeren, even geduld a.u.b",
+    "Successful": "Sjabloon {template} succesvol geïmporteerd",
+    "NoTemplatesTitle": "Wilt u templates importeren?",
+    "NoTemplatesContent": "U heeft momenteel geen sjablonen. Sjablonen zijn noodzakelijk om servers aan te maken.<br/>Wilt u nu enkele sjablonen importeren uit de officiële PufferPanel templates?"
+  },
+  "stop": {
+    "Command": "Commando",
+    "Signal": "Signaal"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "Downloaden",
+      "files": "Bestanden"
+    },
+    "command": {
+      "ProcessorName": "Opdrachten uitvoeren",
+      "commands": "Commando‘s"
+    },
+    "alterfile": {
+      "ProcessorName": "Bestand wijzigen",
+      "regex": "Behandel zoeken als RegEx",
+      "search": "Tekst zoeken",
+      "replace": "Vervangen door"
+    },
+    "writefile": {
+      "ProcessorName": "Schrijf naar bestand",
+      "text": "Inhoud"
+    },
+    "move": {
+      "ProcessorName": "Bestanden verplaatsen",
+      "source": "Bron",
+      "target": "Doel"
+    },
+    "mkdir": {
+      "ProcessorName": "Map aanmaken"
+    },
+    "mojangdl": {
+      "ProcessorName": "Download Minecraft"
+    },
+    "forgedl": {
+      "ProcessorName": "Download Minecraft Forge"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Download Minecraft SpongeForge",
+      "releaseType": "Versietype"
+    },
+    "fabricdl": {
+      "ProcessorName": "Download Minecraft Fabric"
+    }
+  }
+}

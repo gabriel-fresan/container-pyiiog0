@@ -1,0 +1,20 @@
+{
+  "Node": "Nod",
+  "Nodes": "Noder",
+  "Edit": "Redigera nod",
+  "Add": "Lägg till nod",
+  "Update": "Uppdatera nod",
+  "Delete": "Ta bort nod",
+  "PublicHost": "Offentlig värd",
+  "PublicPort": "Offentlig port",
+  "PrivateHost": "Privat värd",
+  "PrivatePort": "Privat port",
+  "SftpPort": "SFTP-port",
+  "WithPrivateAddress": "Använd en annan värd/port för server-till-server-kommunikation",
+  "WithPrivateAddressHint": "Denna separata adress används när huvudnoden behöver prata med den nya noden. Användbart till exempel när noderna är i samma nätverk bakom NAT.",
+  "SaveConfig": "Spara konfiguration",
+  "SavePublicKey": "Spara publik nyckel",
+  "DeploymentInstruction": "För att distribuera noden, installera PufferPanel på den nya servern och placera konfigurationsfilen i `/etc/pufferpanel/`<br/>Starta om PufferPanel på den nya servern efteråt.",
+  "UpdateSuccess": "Uppdatering av nod lyckades",
+  "UpdateError": "Fel vid uppdatering av nod"
+}

@@ -1,0 +1,20 @@
+{
+  "Node": "Düğüm",
+  "Nodes": "Düğümler",
+  "Edit": "Düğümü düzenle",
+  "Add": "Düğüm ekle",
+  "Update": "Düğümü güncelle",
+  "Delete": "Düğüm sil",
+  "PublicHost": "Ana sunucu",
+  "PublicPort": "Ana port",
+  "PrivateHost": "Yerel sunucu",
+  "PrivatePort": "Yerel port",
+  "SftpPort": "SFTP Port",
+  "WithPrivateAddress": "Sunucudan sunucuya haberleşme için farklı bir \"sunucu/port\" kullanın",
+  "WithPrivateAddressHint": "Bu ayrı adres, ana düğümün yeni düğümle konuşması gerektiğinde kullanılır. Örneğin, düğümler NAT arkasında aynı ağda olduğunda kullanışlıdır.",
+  "SaveConfig": "Ayarları kaydet",
+  "SavePublicKey": "Anahtarı kaydet",
+  "DeploymentInstruction": "Düğümü yerleştirmek için, PufferPanel'i yeni sunucuya kurun ve yapılandırma dosyasını `/etc/pufferpanel/` dizinine yerleştirin.<br/>Daha sonra yeni sunucuda PufferPanel'i yeniden başlatın.",
+  "UpdateSuccess": "Düğüm güncellendi",
+  "UpdateError": "Düğüm güncellenirken hata oluştu"
+}

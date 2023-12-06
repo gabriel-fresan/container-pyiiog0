@@ -1,0 +1,27 @@
+{
+  "Settings": "Beállítások",
+  "PanelSettings": "Panel Beállítások",
+  "EmailSettings": "Email Beállítások",
+  "MasterUrl": "Fő URL",
+  "MasterUrlHint": "Az alap URL, amin a http://localhost:8080 formában lehet elérni a panelt",
+  "CompanyName": "Vállakozás Neve",
+  "DefaultTheme": "Alapértelmezett Téma",
+  "RegistrationEnabled": "A felhasználók maguk regisztrálhatnak",
+  "RegistrationEnabledHint1": "A magukat regisztrált felhasználók nem csinálhatnak semmit, ameddig arra jogot nem kapnak",
+  "RegistrationEnabledHint2": "Ennek a kikapcsolása csak a közvetlen regisztrálást akadályozza meg, a szerverre való meghívásra és a Felhasználók lapra nincs hatással",
+  "EmailProvider": "Email Szolgáltató",
+  "emailProviders": {
+    "none": "Ezek közül egyik sem",
+    "smtp": "SMTP",
+    "mailgun": "Mailgun",
+    "mailjet": "Mailjet"
+  },
+  "emailFields": {
+    "from": "A feladó címe",
+    "domain": "Domain",
+    "key": "API kulcs",
+    "host": "Kiszolgáló",
+    "username": "Felhasználónév",
+    "password": "Jelszó"
+  }
+}

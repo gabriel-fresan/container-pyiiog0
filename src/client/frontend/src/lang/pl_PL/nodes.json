@@ -1,0 +1,20 @@
+{
+  "Node": "Węzeł",
+  "Nodes": "Węzły",
+  "Edit": "Edytuj węzeł",
+  "Add": "Dodaj węzeł",
+  "Update": "Aktualizuj węzeł",
+  "Delete": "Usuń węzeł",
+  "PublicHost": "Publiczny Host",
+  "PublicPort": "Publiczny Port",
+  "PrivateHost": "Prywatny Host",
+  "PrivatePort": "Prywatny Port",
+  "SftpPort": "Port SFTP",
+  "WithPrivateAddress": "Użyj innego hosta/portu dla serwera do komunikacji z serwerem",
+  "WithPrivateAddressHint": "Ten oddzielny adres jest używany, gdy maszyna główna musi rozmawiać z nową maszyną. Przydatne na przykład, gdy maszyny znajdują się w tej samej sieci za NAT.",
+  "SaveConfig": "Zapisz konfigurację",
+  "SavePublicKey": "Zapisz klucz publiczny",
+  "DeploymentInstruction": "Aby wdrożyć węzeł, zainstaluj PufferPanel na nowym serwerze i umieść plik konfiguracyjny w `/etc/pufferpanel/`<br/>Następnie uruchom ponownie PufferPanel na nowym serwerze.",
+  "UpdateSuccess": "Pomyślnie zaktualizowano węzeł",
+  "UpdateError": "Błąd podczas aktualizacji węzła"
+}

@@ -1,0 +1,19 @@
+{
+  "FileManager": "Manager de fișiere",
+  "NewFolder": "Folder nou",
+  "NewFile": "Fișier nou",
+  "LastModified": "Ultima modificare",
+  "ConfirmDelete": "Eşti sigur că vrei să ştergi acest fişier?",
+  "Upload": "Încarcă",
+  "Download": "Descarcă",
+  "Size": "Dimensiune",
+  "NoFiles": "Nu sunt fişiere aici încă, mergi şi creează-le de exemplu făcând clic pe butonul de instalare din partea de sus a paginii",
+  "FileLoadFailed": "Încărcarea fișierului a eșuat",
+  "Refresh": "Reîncarcă",
+  "CreateFile": "Crează fișier",
+  "CreateFolder": "Creează folder",
+  "ArchiveCurrentFolder": "Creare arhivă din folderul curent",
+  "ArchiveFolder": "Creare arhivă din folder",
+  "ExtractArchive": "Extrage arhiva",
+  "DropToUpload": "Trage fișierele aici pentru a le încărca"
+}

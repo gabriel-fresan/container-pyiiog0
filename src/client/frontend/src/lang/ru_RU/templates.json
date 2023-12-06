@@ -1,0 +1,111 @@
+{
+  "Templates": "Шаблоны",
+  "NoTemplates": "Нет шаблонов",
+  "Deleted": "Шаблон удалён",
+  "New": "Создать новый шаблон",
+  "Edit": "Редактировать шаблон",
+  "Editor": "Редактор",
+  "Json": "JSON",
+  "Display": "Отображаемое имя",
+  "Type": "Тип",
+  "Variables": "Переменные",
+  "Install": "Установить",
+  "AddInstallStep": "Добавить шаг установки",
+  "DeleteInstallStep": "Удалить шаг установки",
+  "Description": "Описание",
+  "DataType": "Тип данных",
+  "DefaultValue": "Значение по умолчанию",
+  "Required": "Обязательно",
+  "UserEditable": "Пользователи могут редактировать",
+  "Value": "Значение",
+  "AddOption": "Добавить свойство",
+  "AddCommand": "Добавить команду",
+  "Filename": "Имя файла",
+  "Content": "Содержимое",
+  "Source": "Источник",
+  "Target": "Цель",
+  "Version": "Версия",
+  "ReleaseType": "Тип выпуска",
+  "AddFile": "Добавить файл",
+  "AddVariable": "Добавить переменную",
+  "Environment": "Окружение",
+  "Environments": "Окружения",
+  "AddEnvironment": "Добавить окружение",
+  "DefaultEnvironment": "Стандартное окружение",
+  "AddEnvVar": "Добавить переменную окружения",
+  "EnvVars": "Переменные окружения",
+  "DockerImage": "Снимок Docker",
+  "SaveSuccess": "Шаблон сохранён",
+  "VarNameNoSpaces": "Имя переменной не может быть пустым или содержать пробелы",
+  "SupportedEnvironments": "Поддерживаемые окружения",
+  "RunConfig": "Запустить конфигурацию",
+  "PreHook": "Предварительный крючок",
+  "PostHook": "Крюк после пробежки",
+  "AddPreStep": "Добавить шаг перед запуском",
+  "AddPostStep": "Добавить шаг после запуска",
+  "DeletePreStep": "Удалить шаг перед запуском",
+  "DeletePostStep": "Удалить шаг после запуска",
+  "Shutdown": "Выключить",
+  "Command": "Команда",
+  "WorkingDirectory": "Рабочий каталог",
+  "Arguments": "Аргументы",
+  "AddArgument": "Добавить аргумент",
+  "Convert": "Перерабатывать",
+  "OfferV1Convert": "Этот шаблон json выглядит как шаблон для PufferPanel 1.x, хотите ли вы автоматически преобразовать его в шаблон для PufferPanel 2.x?",
+  "import": {
+    "CommunityWarning": "These templates are made by the community and provided without any warranties",
+    "OverrideWarning": "ВНИМАНИЕ: Импортированные шаблоны БУДУТ перезаписывать существующие шаблоны с тем же ID",
+    "Import": "Импорт шаблонов",
+    "Tooltip": "Импорт шаблонов из официального репозитория",
+    "Select": "Выбрать шаблон для импорта",
+    "Started": "Импорт шаблонов, подождите минутку",
+    "Successful": "Шаблон {template} успешно импортирован",
+    "NoTemplatesTitle": "Вы хотите импортировать шаблон?",
+    "NoTemplatesContent": "В настоящее время у вас нет шаблонов. Шаблоны необходимы для создания серверов.<br/>Вы хотите импортировать шаблон из официального хранилища шаблонов PufferPanel?"
+  },
+  "stop": {
+    "Command": "Команда",
+    "Signal": "Сигнал"
+  },
+  "processors": {
+    "download": {
+      "ProcessorName": "Скачать",
+      "files": "Файлы"
+    },
+    "command": {
+      "ProcessorName": "Выполнить команду",
+      "commands": "Команды"
+    },
+    "alterfile": {
+      "ProcessorName": "Сменить файл",
+      "regex": "Рассматривать поиск как RegEx",
+      "search": "Текст для поиска",
+      "replace": "Заменить"
+    },
+    "writefile": {
+      "ProcessorName": "Записать в файл",
+      "text": "Содержание"
+    },
+    "move": {
+      "ProcessorName": "Переместить файл",
+      "source": "Источник",
+      "target": "Цель"
+    },
+    "mkdir": {
+      "ProcessorName": "Создать директорию"
+    },
+    "mojangdl": {
+      "ProcessorName": "Загрузить Minecraft"
+    },
+    "forgedl": {
+      "ProcessorName": "Скачать Minecraft Forge"
+    },
+    "spongeforgedl": {
+      "ProcessorName": "Скачать Minecraft SpongeForge",
+      "releaseType": "Тип релиза"
+    },
+    "fabricdl": {
+      "ProcessorName": "Скачать Minecraft Fabric"
+    }
+  }
+}
