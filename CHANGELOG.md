@@ -1,3 +1,15 @@
+# v0.0.7 (Wed Dec 06 2023)
+
+#### ⚠️ Pushed to `main`
+
+- Adicionar o DOCKERFILE para executar Crafty Controller ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+#### Authors: 1
+
+- Gabriel fresan ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+---
+
 # v0.0.6 (Wed Dec 06 2023)
 
 #### ⚠️ Pushed to `main`
