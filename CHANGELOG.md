@@ -1,3 +1,15 @@
+# v0.0.5 (Wed Dec 06 2023)
+
+#### ⚠️ Pushed to `main`
+
+- version rollback of puffer panel to a more stable one ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+#### Authors: 1
+
+- Gabriel fresan ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+---
+
 # v0.0.4 (Wed Dec 06 2023)
 
 #### ⚠️ Pushed to `main`
