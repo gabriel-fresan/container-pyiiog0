@@ -63,7 +63,5 @@ COPY --from=builder --chown=pufferpanel:pufferpanel /build/pufferpanel/config.li
 
 USER pufferpanel
 
-RUN /pufferpanel/bin/pufferpanel user add --admin --email gab@dev.local --name gabriel --password numeros1
-
 ENTRYPOINT ["/pufferpanel/bin/pufferpanel"]
 CMD ["run"]
