@@ -1,3 +1,15 @@
+# v0.0.2 (Wed Dec 06 2023)
+
+#### ⚠️ Pushed to `main`
+
+- adição completa do pufferpanel ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+#### Authors: 1
+
+- Gabriel fresan ([@gabriel-fresan](https://github.com/gabriel-fresan))
+
+---
+
 # v0.0.1 (Wed Dec 06 2023)
 
 :tada: This release contains work from a new contributor! :tada:
