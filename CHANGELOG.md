@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # v0.0.5 (Wed Dec 06 2023)
 
 #### ⚠️ Pushed to `main`
@@ -22,6 +23,8 @@
 
 ---
 
+=======
+>>>>>>> da7277e (Revert "Update CHANGELOG.md [skip ci]")
 # v0.0.3 (Wed Dec 06 2023)
 
 #### ⚠️ Pushed to `main`
